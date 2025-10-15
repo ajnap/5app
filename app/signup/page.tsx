@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
 import { ROUTES } from '@/lib/constants'
 
+// Force dynamic rendering - this page needs runtime environment variables
+export const dynamic = 'force-dynamic'
+
 export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -13,9 +16,11 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+
+  // Create Supabase client - using NEXT_PUBLIC env vars which are available at build time
   const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
   )
 
   const handleAuth = async (e: React.FormEvent) => {
