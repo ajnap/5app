@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
+import { ROUTES } from '@/lib/constants'
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -12,7 +13,10 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,7 +30,7 @@ export default function SignupPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}${ROUTES.DASHBOARD}`,
           },
         })
 
@@ -37,7 +41,7 @@ export default function SignupPage() {
           if (data.user.identities?.length === 0) {
             setError('This email is already registered. Please sign in instead.')
           } else {
-            router.push('/dashboard')
+            router.push(ROUTES.DASHBOARD)
           }
         }
       } else {
@@ -48,7 +52,7 @@ export default function SignupPage() {
         })
 
         if (error) throw error
-        router.push('/dashboard')
+        router.push(ROUTES.DASHBOARD)
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred during authentication')
@@ -62,7 +66,7 @@ export default function SignupPage() {
       <div className="max-w-md w-full">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-bold text-primary-700">
+          <Link href={ROUTES.HOME} className="text-2xl font-bold text-primary-700">
             The Next 5 Minutes
           </Link>
           <p className="text-gray-600 mt-2">
@@ -139,7 +143,7 @@ export default function SignupPage() {
 
           {/* Back to Home */}
           <div className="mt-4 text-center">
-            <Link href="/" className="text-gray-500 hover:text-gray-700 text-sm">
+            <Link href={ROUTES.HOME} className="text-gray-500 hover:text-gray-700 text-sm">
               ← Back to home
             </Link>
           </div>

@@ -1,8 +1,9 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '@/components/SignOutButton'
+import { SUBSCRIPTION_STATUS, ROUTES } from '@/lib/constants'
 
 // This function fetches today's prompt from the database
 async function getTodaysPrompt(supabase: any) {
@@ -28,13 +29,24 @@ async function getTodaysPrompt(supabase: any) {
 }
 
 export default async function DashboardPage() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+      },
+    }
+  )
 
   // Check if user is authenticated
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session) {
-    redirect('/signup')
+    redirect(ROUTES.SIGNUP)
   }
 
   // Get user's subscription status
@@ -45,7 +57,7 @@ export default async function DashboardPage() {
     .single()
 
   const todaysPrompt = await getTodaysPrompt(supabase)
-  const isPremium = profile?.subscription_status === 'active'
+  const isPremium = profile?.subscription_status === SUBSCRIPTION_STATUS.ACTIVE
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white">
@@ -56,7 +68,7 @@ export default async function DashboardPage() {
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600">{session.user.email}</span>
             <Link
-              href="/account"
+              href={ROUTES.ACCOUNT}
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
               Account
@@ -78,7 +90,7 @@ export default async function DashboardPage() {
                   <p className="text-yellow-700 text-sm">Upgrade to unlock all features</p>
                 </div>
                 <Link
-                  href="/account"
+                  href={ROUTES.ACCOUNT}
                   className="bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700 transition"
                 >
                   Upgrade

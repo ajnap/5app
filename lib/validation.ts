@@ -21,8 +21,8 @@ export const signupSchema = z.object({
 
 // Stripe checkout schema
 export const checkoutSchema = z.object({
-  tier: z.enum([SUBSCRIPTION_TIER.MONTHLY, SUBSCRIPTION_TIER.YEARLY], {
-    errorMap: () => ({ message: 'Invalid subscription tier. Must be "monthly" or "yearly"' }),
+  tier: z.enum([SUBSCRIPTION_TIER.MONTHLY as 'monthly', SUBSCRIPTION_TIER.YEARLY as 'yearly'], {
+    message: 'Invalid subscription tier. Must be "monthly" or "yearly"',
   }),
 })
 
@@ -50,7 +50,7 @@ export function formatZodError(error: z.ZodError): {
 } {
   return {
     message: 'Validation failed',
-    errors: error.errors.map(err => ({
+    errors: error.issues.map(err => ({
       field: err.path.join('.'),
       message: err.message,
     })),

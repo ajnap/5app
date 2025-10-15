@@ -1,11 +1,10 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import type { Database } from '@/types/database'
 
 // Client-side Supabase client (use in client components)
 export const createClient = () =>
-  createBrowserClient<Database>(
+  createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
@@ -14,7 +13,7 @@ export const createClient = () =>
 export const createServerClient = () => {
   const cookieStore = cookies()
 
-  return createSupabaseServerClient<Database>(
+  return createSupabaseServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {

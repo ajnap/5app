@@ -1,19 +1,31 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '@/components/SignOutButton'
 import CheckoutButton from '@/components/CheckoutButton'
 import ManageSubscriptionButton from '@/components/ManageSubscriptionButton'
+import { SUBSCRIPTION_STATUS, ROUTES } from '@/lib/constants'
 
 export default async function AccountPage() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+      },
+    }
+  )
 
   // Check if user is authenticated
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session) {
-    redirect('/signup')
+    redirect(ROUTES.SIGNUP)
   }
 
   // Get user's profile and subscription info
@@ -23,7 +35,7 @@ export default async function AccountPage() {
     .eq('id', session.user.id)
     .single()
 
-  const isPremium = profile?.subscription_status === 'active'
+  const isPremium = profile?.subscription_status === SUBSCRIPTION_STATUS.ACTIVE
   const subscriptionTier = profile?.subscription_tier || 'free'
 
   return (
@@ -31,12 +43,12 @@ export default async function AccountPage() {
       {/* Navigation */}
       <nav className="container mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
-          <Link href="/dashboard" className="text-2xl font-bold text-primary-700">
+          <Link href={ROUTES.DASHBOARD} className="text-2xl font-bold text-primary-700">
             The Next 5 Minutes
           </Link>
           <div className="flex items-center space-x-4">
             <Link
-              href="/dashboard"
+              href={ROUTES.DASHBOARD}
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
               Dashboard
