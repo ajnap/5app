@@ -1,27 +1,46 @@
 import { NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import Stripe from 'stripe'
+import { z } from 'zod'
 import { stripe, getOrCreateStripeCustomer, SUBSCRIPTION_TIERS, SubscriptionTier } from '@/lib/stripe'
+import { checkoutSchema, formatZodError } from '@/lib/validation'
+import { ERROR_MESSAGES, ROUTES } from '@/lib/constants'
 
 export async function POST(request: Request) {
   try {
-    const { tier } = await request.json()
+    // Parse and validate request body
+    const body = await request.json()
+    const validation = checkoutSchema.safeParse(body)
 
-    // Validate tier
-    if (!tier || !SUBSCRIPTION_TIERS[tier as SubscriptionTier]) {
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid subscription tier' },
+        formatZodError(validation.error),
         { status: 400 }
       )
     }
 
+    const { tier } = validation.data
+
     // Get authenticated user
-    const supabase = createRouteHandlerClient({ cookies })
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
+    )
+
     const { data: { session } } = await supabase.auth.getSession()
 
     if (!session) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: ERROR_MESSAGES.UNAUTHORIZED },
         { status: 401 }
       )
     }
@@ -48,8 +67,8 @@ export async function POST(request: Request) {
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/account?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/account?canceled=true`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}${ROUTES.ACCOUNT}?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}${ROUTES.ACCOUNT}?canceled=true`,
       metadata: {
         user_id: session.user.id,
         tier,
@@ -57,10 +76,28 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json({ url: checkoutSession.url })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Checkout error:', error)
+
+    // Handle Stripe-specific errors
+    if (error instanceof Stripe.errors.StripeError) {
+      return NextResponse.json(
+        { error: 'Payment processing error. Please try again.' },
+        { status: 400 }
+      )
+    }
+
+    // Handle validation errors
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        formatZodError(error),
+        { status: 400 }
+      )
+    }
+
+    // Generic error response
     return NextResponse.json(
-      { error: error.message || 'Failed to create checkout session' },
+      { error: ERROR_MESSAGES.CHECKOUT_FAILED },
       { status: 500 }
     )
   }
