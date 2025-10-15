@@ -3,15 +3,25 @@ import { headers } from 'next/headers'
 import { stripe } from '@/lib/stripe'
 import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
+import { SUBSCRIPTION_STATUS, SUBSCRIPTION_TIER, STRIPE_EVENTS } from '@/lib/constants'
 
-// Initialize Supabase with service role key for admin operations
+// Helper function to get Supabase admin client
 // This bypasses RLS policies - use with caution
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  )
+}
 
 export async function POST(request: Request) {
+  const supabaseAdmin = getSupabaseAdmin()
   const body = await request.text()
   const signature = headers().get('stripe-signature')!
 
@@ -35,15 +45,15 @@ export async function POST(request: Request) {
   // Handle the event
   try {
     switch (event.type) {
-      case 'checkout.session.completed': {
+      case STRIPE_EVENTS.CHECKOUT_COMPLETED: {
         const session = event.data.object as Stripe.Checkout.Session
 
         // Update user's subscription status
         await supabaseAdmin
           .from('profiles')
           .update({
-            subscription_status: 'active',
-            subscription_tier: session.metadata?.tier || 'monthly',
+            subscription_status: SUBSCRIPTION_STATUS.ACTIVE,
+            subscription_tier: session.metadata?.tier || SUBSCRIPTION_TIER.MONTHLY,
             stripe_subscription_id: session.subscription as string,
             stripe_customer_id: session.customer as string,
           })
@@ -53,11 +63,13 @@ export async function POST(request: Request) {
         break
       }
 
-      case 'customer.subscription.updated': {
+      case STRIPE_EVENTS.SUBSCRIPTION_UPDATED: {
         const subscription = event.data.object as Stripe.Subscription
 
         // Update subscription status
-        const status = subscription.status === 'active' ? 'active' : 'inactive'
+        const status = subscription.status === 'active'
+          ? SUBSCRIPTION_STATUS.ACTIVE
+          : SUBSCRIPTION_STATUS.INACTIVE
 
         await supabaseAdmin
           .from('profiles')
@@ -70,15 +82,15 @@ export async function POST(request: Request) {
         break
       }
 
-      case 'customer.subscription.deleted': {
+      case STRIPE_EVENTS.SUBSCRIPTION_DELETED: {
         const subscription = event.data.object as Stripe.Subscription
 
         // Mark subscription as cancelled
         await supabaseAdmin
           .from('profiles')
           .update({
-            subscription_status: 'cancelled',
-            subscription_tier: 'free',
+            subscription_status: SUBSCRIPTION_STATUS.CANCELLED,
+            subscription_tier: SUBSCRIPTION_TIER.FREE,
           })
           .eq('stripe_subscription_id', subscription.id)
 
@@ -86,7 +98,7 @@ export async function POST(request: Request) {
         break
       }
 
-      case 'invoice.payment_failed': {
+      case STRIPE_EVENTS.PAYMENT_FAILED: {
         const invoice = event.data.object as Stripe.Invoice
 
         // Mark subscription as inactive
@@ -94,7 +106,7 @@ export async function POST(request: Request) {
           await supabaseAdmin
             .from('profiles')
             .update({
-              subscription_status: 'inactive',
+              subscription_status: SUBSCRIPTION_STATUS.INACTIVE,
             })
             .eq('stripe_subscription_id', invoice.subscription as string)
         }
