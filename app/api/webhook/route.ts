@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { stripe } from '@/lib/stripe'
-import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
 import { SUBSCRIPTION_STATUS, SUBSCRIPTION_TIER, STRIPE_EVENTS } from '@/lib/constants'
 
-// Helper function to get Supabase admin client
-// This bypasses RLS policies - use with caution
-function getSupabaseAdmin() {
-  return createClient(
+// Use dynamic import for Supabase to avoid build-time initialization
+export async function POST(request: Request) {
+  // Dynamically import and initialize Supabase admin client at runtime
+  const { createClient } = await import('@supabase/supabase-js')
+  const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
@@ -18,10 +18,6 @@ function getSupabaseAdmin() {
       }
     }
   )
-}
-
-export async function POST(request: Request) {
-  const supabaseAdmin = getSupabaseAdmin()
   const body = await request.text()
   const signature = headers().get('stripe-signature')!
 
