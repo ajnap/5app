@@ -97,7 +97,7 @@ export default async function AccountPage() {
                         You have full access to all features and daily prompts.
                       </p>
                       <p className="text-green-700 text-sm mt-2">
-                        Plan: {subscriptionTier === 'yearly' ? 'Annual ($99/year)' : 'Monthly ($9.99/month)'}
+                        Plan: {subscriptionTier === 'yearly' ? 'Annual ($10/year)' : 'Monthly ($1/month)'}
                       </p>
                     </div>
                   </div>
@@ -118,7 +118,7 @@ export default async function AccountPage() {
                   <div className="border-2 border-primary-200 rounded-lg p-6 hover:border-primary-400 transition">
                     <h3 className="text-xl font-semibold mb-2">Monthly</h3>
                     <div className="text-3xl font-bold text-primary-600 mb-4">
-                      $9.99<span className="text-lg text-gray-600">/month</span>
+                      $1<span className="text-lg text-gray-600">/month</span>
                     </div>
                     <ul className="space-y-2 mb-6 text-sm">
                       <li className="flex items-center">
@@ -148,7 +148,7 @@ export default async function AccountPage() {
                     </div>
                     <h3 className="text-xl font-semibold mb-2">Annual</h3>
                     <div className="text-3xl font-bold text-primary-600 mb-4">
-                      $99<span className="text-lg text-gray-600">/year</span>
+                      $10<span className="text-lg text-gray-600">/year</span>
                     </div>
                     <ul className="space-y-2 mb-6 text-sm">
                       <li className="flex items-center">
@@ -157,7 +157,7 @@ export default async function AccountPage() {
                       </li>
                       <li className="flex items-center">
                         <span className="text-green-500 mr-2">✓</span>
-                        Save $20/year
+                        Save $2/year
                       </li>
                       <li className="flex items-center">
                         <span className="text-green-500 mr-2">✓</span>
