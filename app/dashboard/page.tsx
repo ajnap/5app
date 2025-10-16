@@ -60,16 +60,16 @@ export default async function DashboardPage() {
   const isPremium = profile?.subscription_status === SUBSCRIPTION_STATUS.ACTIVE
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       {/* Navigation */}
-      <nav className="container mx-auto px-6 py-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary-700">The Next 5 Minutes</h1>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600">{session.user.email}</span>
+      <nav className="container mx-auto px-6 py-6 fade-in">
+        <div className="flex justify-between items-center backdrop-blur-sm bg-white/30 rounded-2xl px-6 py-3 shadow-sm">
+          <h1 className="text-2xl font-bold gradient-text">The Next 5 Minutes</h1>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-700 font-medium hidden md:block">{session.user.email}</span>
             <Link
               href={ROUTES.ACCOUNT}
-              className="text-primary-600 hover:text-primary-700 font-medium"
+              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
             >
               Account
             </Link>
@@ -79,29 +79,29 @@ export default async function DashboardPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-12">
-        <div className="max-w-3xl mx-auto">
+      <main className="container mx-auto px-6 py-8">
+        <div className="max-w-4xl mx-auto">
           {/* Subscription Status Banner */}
           {!isPremium && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
-              <div className="flex justify-between items-center">
+            <div className="card bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 mb-8 fade-in">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                  <p className="text-yellow-800 font-medium">You're on the free plan</p>
-                  <p className="text-yellow-700 text-sm">Upgrade to unlock all features</p>
+                  <p className="text-amber-900 font-bold text-lg mb-1">🌟 Unlock Full Access</p>
+                  <p className="text-amber-700">Upgrade to premium for unlimited prompts and advanced features</p>
                 </div>
                 <Link
                   href={ROUTES.ACCOUNT}
-                  className="bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700 transition"
+                  className="btn-primary whitespace-nowrap"
                 >
-                  Upgrade
+                  Upgrade Now
                 </Link>
               </div>
             </div>
           )}
 
           {/* Today's Date */}
-          <div className="text-center mb-8">
-            <p className="text-gray-500 text-sm">
+          <div className="text-center mb-6 fade-in">
+            <p className="text-gray-600 text-lg font-medium">
               {new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
@@ -112,50 +112,66 @@ export default async function DashboardPage() {
           </div>
 
           {/* Prompt Card */}
-          <div className="bg-white rounded-lg shadow-xl p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              {todaysPrompt.title}
-            </h2>
+          <div className="card fade-in bg-gradient-to-br from-white to-primary-50/30 border-2 border-primary-100 relative overflow-hidden">
+            {/* Decorative element */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-200/20 to-purple-200/20 rounded-full blur-3xl -z-10"></div>
 
-            <div className="prose max-w-none">
-              <p className="text-lg text-gray-700 mb-6">
+            {/* Card Header */}
+            <div className="mb-6">
+              <div className="inline-block bg-gradient-to-r from-primary-500 to-purple-500 text-white px-4 py-1 rounded-full text-sm font-semibold mb-4">
+                Today's Connection Moment
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+                {todaysPrompt.title}
+              </h2>
+              <p className="text-xl text-gray-700 leading-relaxed">
                 {todaysPrompt.description}
               </p>
+            </div>
 
-              <div className="bg-primary-50 rounded-lg p-6 mb-6">
-                <h3 className="text-xl font-semibold text-primary-900 mb-3">
-                  Today's Activity
-                </h3>
-                <p className="text-primary-800">
-                  {todaysPrompt.activity}
+            {/* Activity Section */}
+            <div className="bg-gradient-to-br from-primary-100 to-purple-100 rounded-2xl p-8 mb-6 border-2 border-primary-200 relative overflow-hidden">
+              <div className="absolute top-0 right-0 text-9xl opacity-10">💝</div>
+              <h3 className="text-2xl font-bold text-primary-900 mb-4 flex items-center gap-2">
+                <span className="text-3xl">✨</span>
+                Today's Activity
+              </h3>
+              <p className="text-lg text-primary-900 font-medium leading-relaxed">
+                {todaysPrompt.activity}
+              </p>
+            </div>
+
+            {/* Status Badge */}
+            {isPremium ? (
+              <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl p-5 border-2 border-green-200">
+                <p className="text-green-900 flex items-center gap-3 font-semibold">
+                  <span className="text-3xl">✓</span>
+                  <span>Premium Member - Full access to all prompts</span>
                 </p>
               </div>
-
-              {isPremium ? (
-                <div className="bg-green-50 rounded-lg p-4">
-                  <p className="text-green-800 flex items-center">
-                    <span className="text-2xl mr-2">✓</span>
-                    <span>Premium Member - Full access to all prompts</span>
-                  </p>
-                </div>
-              ) : (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-gray-600 text-sm">
-                    Enjoying the prompts? Upgrade to premium for advanced tracking,
-                    personalized recommendations, and more!
-                  </p>
-                </div>
-              )}
-            </div>
+            ) : (
+              <div className="bg-gradient-to-r from-gray-50 to-slate-100 rounded-xl p-5 border-2 border-gray-200">
+                <p className="text-gray-700 font-medium">
+                  💡 Enjoying the prompts? Upgrade to premium for advanced tracking,
+                  personalized recommendations, and more!
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Quick Actions */}
-          <div className="mt-8 grid md:grid-cols-2 gap-4">
-            <button className="bg-primary-100 text-primary-700 px-6 py-4 rounded-lg hover:bg-primary-200 transition font-medium">
-              Mark as Complete
+          <div className="mt-8 grid md:grid-cols-2 gap-4 fade-in">
+            <button className="card bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:scale-105 group">
+              <div className="flex items-center justify-center gap-3 font-semibold text-lg">
+                <span className="text-2xl group-hover:scale-125 transition-transform">✓</span>
+                Mark as Complete
+              </div>
             </button>
-            <button className="bg-gray-100 text-gray-700 px-6 py-4 rounded-lg hover:bg-gray-200 transition font-medium">
-              View Past Prompts
+            <button className="card bg-gradient-to-r from-slate-100 to-gray-100 text-gray-800 hover:scale-105 group border-2 border-gray-200">
+              <div className="flex items-center justify-center gap-3 font-semibold text-lg">
+                <span className="text-2xl group-hover:scale-125 transition-transform">📚</span>
+                View Past Prompts
+              </div>
             </button>
           </div>
         </div>
