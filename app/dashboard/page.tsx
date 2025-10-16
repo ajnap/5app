@@ -18,6 +18,7 @@ async function getTodaysPrompt(supabase: any) {
   // If no prompt exists for today, return a default prompt
   if (error || !data) {
     return {
+      id: null, // No ID for default prompt
       title: "Welcome to The Next 5 Minutes!",
       description: "Your daily prompt will appear here. Check back tomorrow for your first connection activity!",
       activity: "Set up your account and explore the app.",
@@ -159,20 +160,15 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          {/* Quick Actions */}
-          <div className="mt-8 grid md:grid-cols-2 gap-4 fade-in">
-            <button className="card bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:scale-105 group">
-              <div className="flex items-center justify-center gap-3 font-semibold text-lg">
-                <span className="text-2xl group-hover:scale-125 transition-transform">✓</span>
-                Mark as Complete
-              </div>
-            </button>
-            <button className="card bg-gradient-to-r from-slate-100 to-gray-100 text-gray-800 hover:scale-105 group border-2 border-gray-200">
-              <div className="flex items-center justify-center gap-3 font-semibold text-lg">
-                <span className="text-2xl group-hover:scale-125 transition-transform">📚</span>
-                View Past Prompts
-              </div>
-            </button>
+          {/* Call to Action */}
+          <div className="mt-8 text-center fade-in">
+            <Link
+              href="/prompts"
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+            >
+              <span className="text-2xl">📚</span>
+              View All Prompts
+            </Link>
           </div>
         </div>
       </main>
