@@ -3,30 +3,21 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '@/components/SignOutButton'
+import DashboardClient from '@/components/DashboardClient'
 import { SUBSCRIPTION_STATUS, ROUTES } from '@/lib/constants'
 
-// This function fetches today's prompt from the database
-async function getTodaysPrompt(supabase: any) {
-  const today = new Date().toISOString().split('T')[0]
+// Helper function to calculate age from birth_date
+function calculateAge(birthDate: string): number {
+  const birth = new Date(birthDate)
+  const today = new Date()
+  let age = today.getFullYear() - birth.getFullYear()
+  const monthDiff = today.getMonth() - birth.getMonth()
 
-  const { data, error } = await supabase
-    .from('daily_prompts')
-    .select('*')
-    .eq('date', today)
-    .single()
-
-  // If no prompt exists for today, return a default prompt
-  if (error || !data) {
-    return {
-      id: null, // No ID for default prompt
-      title: "Welcome to The Next 5 Minutes!",
-      description: "Your daily prompt will appear here. Check back tomorrow for your first connection activity!",
-      activity: "Set up your account and explore the app.",
-      date: today
-    }
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--
   }
 
-  return data
+  return age
 }
 
 export default async function DashboardPage() {
@@ -57,8 +48,29 @@ export default async function DashboardPage() {
     .eq('id', session.user.id)
     .single()
 
-  const todaysPrompt = await getTodaysPrompt(supabase)
   const isPremium = profile?.subscription_status === SUBSCRIPTION_STATUS.ACTIVE
+
+  // Fetch user's children
+  const { data: childrenData } = await supabase
+    .from('child_profiles')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .order('created_at', { ascending: true })
+
+  // Calculate ages for children
+  const children = (childrenData || []).map(child => ({
+    ...child,
+    age: calculateAge(child.birth_date)
+  }))
+
+  // Fetch all prompts (we'll filter on client side)
+  const { data: promptsData } = await supabase
+    .from('daily_prompts')
+    .select('*')
+    .order('date', { ascending: true })
+    .limit(50)
+
+  const prompts = promptsData || []
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -118,64 +130,8 @@ export default async function DashboardPage() {
             </p>
           </div>
 
-          {/* Prompt Card */}
-          <div className="card fade-in bg-gradient-to-br from-white to-primary-50/30 border-2 border-primary-100 relative overflow-hidden">
-            {/* Decorative element */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-200/20 to-purple-200/20 rounded-full blur-3xl -z-10"></div>
-
-            {/* Card Header */}
-            <div className="mb-6">
-              <div className="inline-block bg-gradient-to-r from-primary-500 to-purple-500 text-white px-4 py-1 rounded-full text-sm font-semibold mb-4">
-                Today's Connection Moment
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-                {todaysPrompt.title}
-              </h2>
-              <p className="text-xl text-gray-700 leading-relaxed">
-                {todaysPrompt.description}
-              </p>
-            </div>
-
-            {/* Activity Section */}
-            <div className="bg-gradient-to-br from-primary-100 to-purple-100 rounded-2xl p-8 mb-6 border-2 border-primary-200 relative overflow-hidden">
-              <div className="absolute top-0 right-0 text-9xl opacity-10">💝</div>
-              <h3 className="text-2xl font-bold text-primary-900 mb-4 flex items-center gap-2">
-                <span className="text-3xl">✨</span>
-                Today's Activity
-              </h3>
-              <p className="text-lg text-primary-900 font-medium leading-relaxed">
-                {todaysPrompt.activity}
-              </p>
-            </div>
-
-            {/* Status Badge */}
-            {isPremium ? (
-              <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl p-5 border-2 border-green-200">
-                <p className="text-green-900 flex items-center gap-3 font-semibold">
-                  <span className="text-3xl">✓</span>
-                  <span>Premium Member - Full access to all prompts</span>
-                </p>
-              </div>
-            ) : (
-              <div className="bg-gradient-to-r from-gray-50 to-slate-100 rounded-xl p-5 border-2 border-gray-200">
-                <p className="text-gray-700 font-medium">
-                  💡 Enjoying the prompts? Upgrade to premium for advanced tracking,
-                  personalized recommendations, and more!
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Call to Action */}
-          <div className="mt-8 text-center fade-in">
-            <Link
-              href="/prompts"
-              className="inline-flex items-center gap-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-            >
-              <span className="text-2xl">📚</span>
-              View All Prompts
-            </Link>
-          </div>
+          {/* Child Selector and Filtered Prompts */}
+          <DashboardClient children={children} prompts={prompts} />
         </div>
       </main>
     </div>
