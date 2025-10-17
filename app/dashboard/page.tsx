@@ -69,6 +69,12 @@ export default async function DashboardPage() {
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-700 font-medium hidden md:block">{session.user.email}</span>
             <Link
+              href="/children"
+              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+            >
+              Children
+            </Link>
+            <Link
               href={ROUTES.ACCOUNT}
               className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
             >
