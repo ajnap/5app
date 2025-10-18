@@ -47,10 +47,18 @@ export default async function FavoritesPage() {
     .order('created_at', { ascending: false })
 
   // Transform the data
-  const favorites = (favoritesData || []).map(fav => ({
-    ...fav.daily_prompts,
-    favorited_at: fav.created_at
-  })).filter(prompt => prompt.id) // Filter out any null prompts
+  const favorites = (favoritesData || [])
+    .map((fav: any) => ({
+      id: fav.daily_prompts?.id,
+      title: fav.daily_prompts?.title || '',
+      description: fav.daily_prompts?.description || '',
+      activity: fav.daily_prompts?.activity || '',
+      category: fav.daily_prompts?.category || '',
+      age_categories: fav.daily_prompts?.age_categories || [],
+      tags: fav.daily_prompts?.tags || [],
+      favorited_at: fav.created_at
+    }))
+    .filter(prompt => prompt.id) // Filter out any null prompts
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
