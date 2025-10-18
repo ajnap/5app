@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import ChildSelector from './ChildSelector'
+import FavoriteButton from './FavoriteButton'
 
 interface Child {
   id: string
@@ -142,8 +143,11 @@ export default function DashboardClient({ children, prompts, completedToday: ini
 
         {/* Card Header */}
         <div className="mb-6">
-          <div className="inline-block bg-gradient-to-r from-primary-500 to-purple-500 text-white px-4 py-1 rounded-full text-sm font-semibold mb-4">
-            {selectedChild ? `Perfect for ${selectedChild.name}` : "Today's Connection Moment"}
+          <div className="flex justify-between items-start mb-4">
+            <div className="inline-block bg-gradient-to-r from-primary-500 to-purple-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+              {selectedChild ? `Perfect for ${selectedChild.name}` : "Today's Connection Moment"}
+            </div>
+            {todaysPrompt.id && <FavoriteButton promptId={todaysPrompt.id} />}
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
             {todaysPrompt.title}

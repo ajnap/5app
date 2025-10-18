@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import FavoriteButton from './FavoriteButton'
 
 interface Child {
   id: string
@@ -210,9 +211,14 @@ export default function PromptsLibraryClient({ children, prompts }: PromptsLibra
           {filteredPrompts.map((prompt, index) => (
             <div
               key={prompt.id}
-              className="card hover-lift slide-in"
+              className="card hover-lift slide-in relative"
               style={{ animationDelay: `${index * 0.05}s` }}
             >
+              {/* Favorite Button */}
+              <div className="absolute top-4 right-4">
+                <FavoriteButton promptId={prompt.id} />
+              </div>
+
               {/* Category Badge */}
               {prompt.category && (
                 <div className="mb-3">
@@ -223,7 +229,7 @@ export default function PromptsLibraryClient({ children, prompts }: PromptsLibra
               )}
 
               {/* Title */}
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+              <h3 className="text-2xl font-bold text-gray-900 mb-3 pr-8">
                 {prompt.title}
               </h3>
 

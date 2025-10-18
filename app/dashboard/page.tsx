@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '@/components/SignOutButton'
 import DashboardClient from '@/components/DashboardClient'
+import CompletionCalendar from '@/components/CompletionCalendar'
 import { SUBSCRIPTION_STATUS, ROUTES } from '@/lib/constants'
 
 // Helper function to calculate age from birth_date
@@ -90,6 +91,25 @@ export default async function DashboardPage() {
 
   const totalCompletions = totalData || 0
 
+  // Get completion history for calendar
+  const { data: completionHistoryData } = await supabase
+    .from('prompt_completions')
+    .select('completion_date')
+    .eq('user_id', session.user.id)
+    .order('completion_date', { ascending: false })
+
+  // Group completions by date and count
+  const completionsByDate = new Map<string, number>()
+  completionHistoryData?.forEach((completion) => {
+    const count = completionsByDate.get(completion.completion_date) || 0
+    completionsByDate.set(completion.completion_date, count + 1)
+  })
+
+  const completionHistory = Array.from(completionsByDate.entries()).map(([date, count]) => ({
+    date,
+    count
+  }))
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       {/* Navigation */}
@@ -98,6 +118,13 @@ export default async function DashboardPage() {
           <h1 className="text-2xl font-bold gradient-text">The Next 5 Minutes</h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-700 font-medium hidden md:block">{session.user.email}</span>
+            <Link
+              href="/favorites"
+              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+              title="My Favorites"
+            >
+              ❤️
+            </Link>
             <Link
               href="/children"
               className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
@@ -178,6 +205,13 @@ export default async function DashboardPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Completion Calendar */}
+          {totalCompletions > 0 && (
+            <div className="mb-8 fade-in">
+              <CompletionCalendar completions={completionHistory} />
             </div>
           )}
 
