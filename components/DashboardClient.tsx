@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
+import { useRouter } from 'next/navigation'
 import ChildSelector from './ChildSelector'
 
 interface Child {
@@ -23,12 +25,21 @@ interface Prompt {
 interface DashboardClientProps {
   children: Child[]
   prompts: Prompt[]
+  completedToday?: boolean
 }
 
-export default function DashboardClient({ children, prompts }: DashboardClientProps) {
+export default function DashboardClient({ children, prompts, completedToday: initialCompletedToday = false }: DashboardClientProps) {
+  const router = useRouter()
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   const [selectedChildId, setSelectedChildId] = useState<string | null>(
     children.length === 1 ? children[0].id : null
   )
+  const [isCompleting, setIsCompleting] = useState(false)
+  const [completedToday, setCompletedToday] = useState(initialCompletedToday)
 
   // Get age category for selected child
   const getAgeCategory = (age: number): string => {
@@ -70,6 +81,38 @@ export default function DashboardClient({ children, prompts }: DashboardClientPr
   }
 
   const selectedChild = children.find(c => c.id === selectedChildId)
+
+  // Handle marking prompt as complete
+  const handleMarkComplete = async () => {
+    if (!todaysPrompt.id || isCompleting) return
+
+    setIsCompleting(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { error } = await supabase
+        .from('prompt_completions')
+        .insert({
+          user_id: user.id,
+          prompt_id: todaysPrompt.id,
+          child_id: selectedChildId
+        })
+
+      if (error) throw error
+
+      setCompletedToday(true)
+      router.refresh() // Refresh to update streak counter
+    } catch (error: any) {
+      console.error('Error marking complete:', error)
+      // Don't show error if it's a duplicate (already completed today)
+      if (!error.message?.includes('duplicate')) {
+        alert('Failed to mark as complete. Please try again.')
+      }
+    } finally {
+      setIsCompleting(false)
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -133,7 +176,7 @@ export default function DashboardClient({ children, prompts }: DashboardClientPr
 
         {/* Tags */}
         {todaysPrompt.tags && todaysPrompt.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mb-6">
             {todaysPrompt.tags.map((tag, index) => (
               <span
                 key={index}
@@ -142,6 +185,30 @@ export default function DashboardClient({ children, prompts }: DashboardClientPr
                 #{tag}
               </span>
             ))}
+          </div>
+        )}
+
+        {/* Mark as Done Button */}
+        {todaysPrompt.id && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            {completedToday ? (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200 text-center">
+                <p className="text-green-900 font-semibold text-lg mb-2">
+                  Great work! You connected today.
+                </p>
+                <p className="text-green-700 text-sm">
+                  You're building a habit of intentional parenting, one moment at a time.
+                </p>
+              </div>
+            ) : (
+              <button
+                onClick={handleMarkComplete}
+                disabled={isCompleting}
+                className="w-full bg-gradient-to-r from-primary-600 to-primary-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {isCompleting ? 'Saving...' : 'Mark as Done'}
+              </button>
+            )}
           </div>
         )}
       </div>

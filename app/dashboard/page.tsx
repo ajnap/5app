@@ -72,6 +72,24 @@ export default async function DashboardPage() {
 
   const prompts = promptsData || []
 
+  // Check if user completed any prompt today
+  const { data: completedTodayData } = await supabase
+    .rpc('completed_today', { p_user_id: session.user.id })
+
+  const completedToday = completedTodayData || false
+
+  // Get current streak
+  const { data: streakData } = await supabase
+    .rpc('get_current_streak', { p_user_id: session.user.id })
+
+  const currentStreak = streakData || 0
+
+  // Get total completions
+  const { data: totalData } = await supabase
+    .rpc('get_total_completions', { p_user_id: session.user.id })
+
+  const totalCompletions = totalData || 0
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       {/* Navigation */}
@@ -130,8 +148,45 @@ export default async function DashboardPage() {
             </p>
           </div>
 
+          {/* Progress Stats */}
+          {(currentStreak > 0 || totalCompletions > 0) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 fade-in">
+              {/* Streak Card */}
+              <div className="card bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200">
+                <div className="flex items-center gap-4">
+                  <div className="text-5xl">🔥</div>
+                  <div>
+                    <p className="text-3xl font-bold text-orange-900">{currentStreak}</p>
+                    <p className="text-orange-700 font-medium">Day Streak</p>
+                    {currentStreak > 0 && (
+                      <p className="text-sm text-orange-600 mt-1">Keep it going!</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Total Completions Card */}
+              <div className="card bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
+                <div className="flex items-center gap-4">
+                  <div className="text-5xl">✅</div>
+                  <div>
+                    <p className="text-3xl font-bold text-green-900">{totalCompletions}</p>
+                    <p className="text-green-700 font-medium">Activities Completed</p>
+                    {totalCompletions > 0 && (
+                      <p className="text-sm text-green-600 mt-1">You're building a habit!</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Child Selector and Filtered Prompts */}
-          <DashboardClient children={children} prompts={prompts} />
+          <DashboardClient
+            children={children}
+            prompts={prompts}
+            completedToday={completedToday}
+          />
         </div>
       </main>
     </div>
