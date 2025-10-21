@@ -1,10 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import ChildSelector from './ChildSelector'
 import FavoriteButton from './FavoriteButton'
+import TodaysPromptCard from './TodaysPromptCard'
+import ReflectionModal from './ReflectionModal'
+import QuickMemoryButton from './QuickMemoryButton'
 
 interface Child {
   id: string
@@ -27,9 +30,17 @@ interface DashboardClientProps {
   children: Child[]
   prompts: Prompt[]
   completedToday?: boolean
+  faithMode?: boolean
+  userId: string
 }
 
-export default function DashboardClient({ children, prompts, completedToday: initialCompletedToday = false }: DashboardClientProps) {
+export default function DashboardClient({
+  children,
+  prompts,
+  completedToday: initialCompletedToday = false,
+  faithMode = false,
+  userId
+}: DashboardClientProps) {
   const router = useRouter()
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -39,8 +50,9 @@ export default function DashboardClient({ children, prompts, completedToday: ini
   const [selectedChildId, setSelectedChildId] = useState<string | null>(
     children.length === 1 ? children[0].id : null
   )
-  const [isCompleting, setIsCompleting] = useState(false)
   const [completedToday, setCompletedToday] = useState(initialCompletedToday)
+  const [reflectionOpen, setReflectionOpen] = useState(false)
+  const [completingPromptId, setCompletingPromptId] = useState<string | null>(null)
 
   // Get age category for selected child
   const getAgeCategory = (age: number): string => {
@@ -83,155 +95,82 @@ export default function DashboardClient({ children, prompts, completedToday: ini
 
   const selectedChild = children.find(c => c.id === selectedChildId)
 
-  // Handle marking prompt as complete
-  const handleMarkComplete = async () => {
-    if (!todaysPrompt.id || isCompleting) return
+  // Handle marking prompt as complete - opens reflection modal
+  const handleMarkComplete = () => {
+    if (!todaysPrompt.id) return
+    setCompletingPromptId(todaysPrompt.id)
+    setReflectionOpen(true)
+  }
 
-    setIsCompleting(true)
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
-      const { error } = await supabase
-        .from('prompt_completions')
-        .insert({
-          user_id: user.id,
-          prompt_id: todaysPrompt.id,
-          child_id: selectedChildId
-        })
-
-      if (error) throw error
-
-      setCompletedToday(true)
-      router.refresh() // Refresh to update streak counter
-    } catch (error: any) {
-      console.error('Error marking complete:', error)
-      // Don't show error if it's a duplicate (already completed today)
-      if (!error.message?.includes('duplicate')) {
-        alert('Failed to mark as complete. Please try again.')
-      }
-    } finally {
-      setIsCompleting(false)
-    }
+  // Handle completion from reflection modal
+  const handleReflectionComplete = async (notes?: string) => {
+    setCompletedToday(true)
+    router.refresh() // Refresh to update streak counter
   }
 
   return (
-    <div className="space-y-8">
-      {/* Child Selector */}
-      <ChildSelector
-        children={children}
-        selectedChildId={selectedChildId}
-        onSelectChild={setSelectedChildId}
-      />
+    <>
+      <div className="space-y-8">
+        {/* Child Selector */}
+        <ChildSelector
+          children={children}
+          selectedChildId={selectedChildId}
+          onSelectChild={setSelectedChildId}
+        />
 
-      {/* Personalization Badge */}
-      {selectedChild && (
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 fade-in">
-          <p className="text-green-900 font-semibold flex items-center gap-2">
-            <span className="text-2xl">✨</span>
-            <span>
-              Personalized for {selectedChild.name} • {filteredPrompts.length} age-appropriate {filteredPrompts.length === 1 ? 'prompt' : 'prompts'} available
-            </span>
-          </p>
-        </div>
-      )}
-
-      {/* Prompt Card */}
-      <div className="card fade-in bg-gradient-to-br from-white to-primary-50/30 border-2 border-primary-100 relative overflow-hidden">
-        {/* Decorative element */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-200/20 to-purple-200/20 rounded-full blur-3xl -z-10"></div>
-
-        {/* Card Header */}
-        <div className="mb-6">
-          <div className="flex justify-between items-start mb-4">
-            <div className="inline-block bg-gradient-to-r from-primary-500 to-purple-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
-              {selectedChild ? `Perfect for ${selectedChild.name}` : "Today's Connection Moment"}
-            </div>
-            {todaysPrompt.id && <FavoriteButton promptId={todaysPrompt.id} />}
-          </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-            {todaysPrompt.title}
-          </h2>
-          <p className="text-xl text-gray-700 leading-relaxed">
-            {todaysPrompt.description}
-          </p>
-        </div>
-
-        {/* Category Badge */}
-        {todaysPrompt.category && (
-          <div className="mb-4">
-            <span className="inline-block bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium capitalize">
-              {todaysPrompt.category}
-            </span>
-          </div>
-        )}
-
-        {/* Activity Section */}
-        <div className="bg-gradient-to-br from-primary-100 to-purple-100 rounded-2xl p-8 mb-6 border-2 border-primary-200 relative overflow-hidden">
-          <div className="absolute top-0 right-0 text-9xl opacity-10">💝</div>
-          <h3 className="text-2xl font-bold text-primary-900 mb-4 flex items-center gap-2">
-            <span className="text-3xl">✨</span>
-            Today's Activity
-          </h3>
-          <p className="text-lg text-primary-900 font-medium leading-relaxed">
-            {todaysPrompt.activity}
-          </p>
-        </div>
-
-        {/* Tags */}
-        {todaysPrompt.tags && todaysPrompt.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {todaysPrompt.tags.map((tag, index) => (
-              <span
-                key={index}
-                className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-medium"
-              >
-                #{tag}
+        {/* Personalization Badge */}
+        {selectedChild && (
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 fade-in">
+            <p className="text-green-900 font-semibold flex items-center gap-2">
+              <span className="text-2xl">✨</span>
+              <span>
+                Personalized for {selectedChild.name} • {filteredPrompts.length} age-appropriate {filteredPrompts.length === 1 ? 'prompt' : 'prompts'} available
               </span>
-            ))}
+            </p>
           </div>
         )}
 
-        {/* Mark as Done Button */}
-        {todaysPrompt.id && (
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            {completedToday ? (
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200 text-center">
-                <p className="text-green-900 font-semibold text-lg mb-2">
-                  Great work! You connected today.
-                </p>
-                <p className="text-green-700 text-sm">
-                  You're building a habit of intentional parenting, one moment at a time.
-                </p>
-              </div>
-            ) : (
-              <button
-                onClick={handleMarkComplete}
-                disabled={isCompleting}
-                className="w-full bg-gradient-to-r from-primary-600 to-primary-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-              >
-                {isCompleting ? 'Saving...' : 'Mark as Done'}
-              </button>
-            )}
+        {/* Today's Prompt Card */}
+        <TodaysPromptCard
+          prompt={todaysPrompt.id ? todaysPrompt : null}
+          childName={selectedChild?.name || 'your child'}
+          childAge={selectedChild?.age || 0}
+          completedToday={completedToday}
+          onMarkComplete={handleMarkComplete}
+        />
+
+        {/* More Prompts Teaser */}
+        {filteredPrompts.length > 1 && (
+          <div className="text-center fade-in">
+            <p className="text-gray-600 mb-4">
+              {filteredPrompts.length - 1} more {selectedChild ? `prompts for ${selectedChild.name}` : 'prompts'} available
+            </p>
+            <a
+              href="/prompts"
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+            >
+              <span className="text-2xl">📚</span>
+              Browse All Prompts
+            </a>
           </div>
         )}
       </div>
 
-      {/* More Prompts Teaser */}
-      {filteredPrompts.length > 1 && (
-        <div className="text-center fade-in">
-          <p className="text-gray-600 mb-4">
-            {filteredPrompts.length - 1} more {selectedChild ? `prompts for ${selectedChild.name}` : 'prompts'} available
-          </p>
-          <a
-            href="/prompts"
-            className="inline-flex items-center gap-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-          >
-            <span className="text-2xl">📚</span>
-            Browse All Prompts
-          </a>
-        </div>
+      {/* Reflection Modal */}
+      {completingPromptId && (
+        <ReflectionModal
+          isOpen={reflectionOpen}
+          onClose={() => setReflectionOpen(false)}
+          promptId={completingPromptId}
+          promptTitle={todaysPrompt.title}
+          childId={selectedChildId}
+          faithMode={faithMode}
+          onComplete={handleReflectionComplete}
+        />
       )}
-    </div>
+
+      {/* Quick Memory Button */}
+      <QuickMemoryButton children={children} userId={userId} />
+    </>
   )
 }

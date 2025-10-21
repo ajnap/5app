@@ -46,7 +46,8 @@ export default function SignupPage() {
           if (data.user.identities?.length === 0) {
             setError('This email is already registered. Please sign in instead.')
           } else {
-            router.push(ROUTES.DASHBOARD)
+            // New user - redirect to onboarding
+            router.push('/onboarding')
           }
         }
       } else {
@@ -57,7 +58,18 @@ export default function SignupPage() {
         })
 
         if (error) throw error
-        router.push(ROUTES.DASHBOARD)
+
+        // Check if onboarding is completed
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .single()
+
+        if (profile?.onboarding_completed) {
+          router.push(ROUTES.DASHBOARD)
+        } else {
+          router.push('/onboarding')
+        }
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred during authentication')

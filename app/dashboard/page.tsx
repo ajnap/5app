@@ -42,14 +42,15 @@ export default async function DashboardPage() {
     redirect(ROUTES.SIGNUP)
   }
 
-  // Get user's subscription status
+  // Get user's subscription status and faith mode
   const { data: profile } = await supabase
     .from('profiles')
-    .select('subscription_status, subscription_tier')
+    .select('subscription_status, subscription_tier, faith_mode')
     .eq('id', session.user.id)
     .single()
 
   const isPremium = profile?.subscription_status === SUBSCRIPTION_STATUS.ACTIVE
+  const faithMode = profile?.faith_mode || false
 
   // Fetch user's children
   const { data: childrenData } = await supabase
@@ -64,20 +65,28 @@ export default async function DashboardPage() {
     age: calculateAge(child.birth_date)
   }))
 
-  // Fetch all prompts (we'll filter on client side)
+  // Fetch all prompts (newest first for today's prompt to be first)
   const { data: promptsData } = await supabase
     .from('daily_prompts')
     .select('*')
-    .order('date', { ascending: true })
+    .order('created_at', { ascending: false })
     .limit(50)
 
   const prompts = promptsData || []
 
-  // Check if user completed any prompt today
-  const { data: completedTodayData } = await supabase
-    .rpc('completed_today', { p_user_id: session.user.id })
+  // Get today's prompt (first one for now - in future we can filter by date)
+  const todaysPromptId = prompts[0]?.id
 
-  const completedToday = completedTodayData || false
+  // Check if user completed TODAY'S specific prompt
+  const { data: completedTodayData } = await supabase
+    .from('prompt_completions')
+    .select('id')
+    .eq('user_id', session.user.id)
+    .eq('prompt_id', todaysPromptId)
+    .eq('completion_date', new Date().toISOString().split('T')[0])
+    .maybeSingle()
+
+  const completedToday = !!completedTodayData
 
   // Get current streak
   const { data: streakData } = await supabase
@@ -220,6 +229,8 @@ export default async function DashboardPage() {
             children={children}
             prompts={prompts}
             completedToday={completedToday}
+            faithMode={faithMode}
+            userId={session.user.id}
           />
         </div>
       </main>
