@@ -52,8 +52,11 @@ export default function AdminResetButton({ userId }: AdminResetButtonProps) {
     }
   }
 
-  // Only show in development
-  if (process.env.NODE_ENV !== 'development') {
+  // Only show on localhost
+  const isLocalhost = typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+
+  if (!isLocalhost) {
     return null
   }
 

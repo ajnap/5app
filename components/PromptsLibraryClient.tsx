@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
+import { toast } from 'sonner'
 import FavoriteButton from './FavoriteButton'
 import ReflectionModal from './ReflectionModal'
 import ConfettiCelebration from './ConfettiCelebration'
@@ -133,17 +134,14 @@ export default function PromptsLibraryClient({
   // Handle starting activity
   const handleStartActivity = (promptId: string) => {
     if (children.length === 0) {
-      alert('Please add a child profile first')
+      toast.error('Add a child first', {
+        description: 'Please add a child profile to start activities'
+      })
       return
     }
 
-    if (children.length > 1 && !selectedChildId) {
-      alert('Please select which child this activity is for')
-      return
-    }
-
+    // For multiple children, just open the modal - they'll select in the modal
     setActivePromptId(promptId)
-    setTimerActive(true)
   }
 
   // Handle timer completion
