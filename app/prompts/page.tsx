@@ -54,6 +54,15 @@ export default async function PromptsPage() {
     age: calculateAge(child.birth_date)
   }))
 
+  // Get user's faith mode
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('faith_mode')
+    .eq('id', session.user.id)
+    .single()
+
+  const faithMode = profile?.faith_mode || false
+
   // Fetch all prompts
   const { data: promptsData } = await supabase
     .from('daily_prompts')
@@ -61,6 +70,18 @@ export default async function PromptsPage() {
     .order('created_at', { ascending: false })
 
   const prompts = promptsData || []
+
+  // Get current streak
+  const { data: streakData } = await supabase
+    .rpc('get_current_streak', { p_user_id: session.user.id })
+
+  const currentStreak = streakData || 0
+
+  // Get total completions
+  const { data: totalData } = await supabase
+    .rpc('get_total_completions', { p_user_id: session.user.id })
+
+  const totalCompletions = totalData || 0
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -102,7 +123,14 @@ export default async function PromptsPage() {
           </div>
 
           {/* Filters and Prompts */}
-          <PromptsLibraryClient children={children} prompts={prompts} />
+          <PromptsLibraryClient
+            children={children}
+            prompts={prompts}
+            userId={session.user.id}
+            faithMode={faithMode}
+            currentStreak={currentStreak}
+            totalCompletions={totalCompletions}
+          />
         </div>
       </main>
     </div>

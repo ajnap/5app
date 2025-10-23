@@ -1,7 +1,13 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
 import FavoriteButton from './FavoriteButton'
+import ReflectionModal from './ReflectionModal'
+import ConfettiCelebration from './ConfettiCelebration'
+import MilestoneCelebration, { detectMilestone, type Milestone } from './MilestoneCelebration'
+import ActivityTimer from './ActivityTimer'
 
 interface Child {
   id: string
@@ -18,17 +24,49 @@ interface Prompt {
   category: string
   age_categories: string[]
   tags: string[]
+  estimated_minutes?: number
 }
 
 interface PromptsLibraryClientProps {
   children: Child[]
   prompts: Prompt[]
+  userId: string
+  faithMode?: boolean
+  currentStreak?: number
+  totalCompletions?: number
 }
 
-export default function PromptsLibraryClient({ children, prompts }: PromptsLibraryClientProps) {
+export default function PromptsLibraryClient({
+  children,
+  prompts,
+  userId,
+  faithMode = false,
+  currentStreak = 0,
+  totalCompletions = 0
+}: PromptsLibraryClientProps) {
+  const router = useRouter()
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState<string>('')
+
+  // Activity completion states
+  const [activePromptId, setActivePromptId] = useState<string | null>(null)
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(
+    children.length === 1 ? children[0].id : null
+  )
+  const [timerActive, setTimerActive] = useState(false)
+  const [completingDuration, setCompletingDuration] = useState<number | undefined>(undefined)
+
+  // Celebration states
+  const [showConfetti, setShowConfetti] = useState(false)
+  const [milestone, setMilestone] = useState<Milestone | null>(null)
+  const [milestoneOpen, setMilestoneOpen] = useState(false)
+  const [reflectionOpen, setReflectionOpen] = useState(false)
 
   // Get unique categories from prompts
   const categories = useMemo(() => {
@@ -91,6 +129,57 @@ export default function PromptsLibraryClient({ children, prompts }: PromptsLibra
       return true
     })
   }, [prompts, selectedCategory, selectedAgeGroup, searchQuery])
+
+  // Handle starting activity
+  const handleStartActivity = (promptId: string) => {
+    if (children.length === 0) {
+      alert('Please add a child profile first')
+      return
+    }
+
+    if (children.length > 1 && !selectedChildId) {
+      alert('Please select which child this activity is for')
+      return
+    }
+
+    setActivePromptId(promptId)
+    setTimerActive(true)
+  }
+
+  // Handle timer completion
+  const handleTimerComplete = (durationSeconds: number) => {
+    // Trigger confetti
+    setShowConfetti(true)
+
+    // Check for milestones
+    const isFirstCompletion = totalCompletions === 0
+    const detectedMilestone = detectMilestone(currentStreak + 1, isFirstCompletion)
+
+    if (detectedMilestone) {
+      setMilestone(detectedMilestone)
+      setMilestoneOpen(true)
+
+      // Delay reflection modal
+      setTimeout(() => {
+        setCompletingDuration(durationSeconds)
+        setReflectionOpen(true)
+      }, 4500)
+    } else {
+      setCompletingDuration(durationSeconds)
+      setReflectionOpen(true)
+    }
+  }
+
+  // Handle reflection completion
+  const handleReflectionComplete = async () => {
+    setTimerActive(false)
+    setActivePromptId(null)
+    setCompletingDuration(undefined)
+    router.refresh()
+  }
+
+  const activePrompt = prompts.find(p => p.id === activePromptId)
+  const selectedChild = children.find(c => c.id === selectedChildId)
 
   return (
     <div className="space-y-6">
@@ -250,7 +339,7 @@ export default function PromptsLibraryClient({ children, prompts }: PromptsLibra
 
               {/* Tags */}
               {prompt.tags && prompt.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mb-4">
                   {prompt.tags.slice(0, 4).map((tag, i) => (
                     <span
                       key={i}
@@ -266,9 +355,127 @@ export default function PromptsLibraryClient({ children, prompts }: PromptsLibra
                   )}
                 </div>
               )}
+
+              {/* Start Activity Button */}
+              <button
+                onClick={() => handleStartActivity(prompt.id)}
+                className="w-full bg-gradient-to-r from-primary-600 to-primary-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 mt-4"
+              >
+                Start Activity
+              </button>
             </div>
           ))}
         </div>
+      )}
+
+      {/* Active Prompt Modal */}
+      {activePromptId && activePrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={() => {
+          if (!timerActive) {
+            setActivePromptId(null)
+          }
+        }}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="mb-6">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                {activePrompt.title}
+              </h2>
+              <p className="text-gray-600">
+                {activePrompt.description}
+              </p>
+            </div>
+
+            {/* Activity Instructions */}
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 mb-6 border-2 border-blue-200">
+              <h3 className="font-semibold text-gray-900 mb-3 text-lg">Activity:</h3>
+              <p className="text-gray-700 leading-relaxed">
+                {activePrompt.activity}
+              </p>
+            </div>
+
+            {/* Child Selector (if multiple children) */}
+            {children.length > 1 && !timerActive && (
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Which child is this for?
+                </label>
+                <select
+                  value={selectedChildId || ''}
+                  onChange={(e) => setSelectedChildId(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary-500 focus:outline-none"
+                >
+                  <option value="">Select a child...</option>
+                  {children.map((child) => (
+                    <option key={child.id} value={child.id}>
+                      {child.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Timer */}
+            {timerActive ? (
+              <ActivityTimer
+                isActive={timerActive}
+                estimatedMinutes={activePrompt.estimated_minutes || 10}
+                promptId={activePrompt.id}
+                onComplete={handleTimerComplete}
+              />
+            ) : (
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setActivePromptId(null)}
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => setTimerActive(true)}
+                  disabled={children.length > 1 && !selectedChildId}
+                  className="flex-1 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Start Timer
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Confetti Celebration */}
+      <ConfettiCelebration
+        trigger={showConfetti}
+        onComplete={() => setShowConfetti(false)}
+      />
+
+      {/* Milestone Celebration */}
+      {milestone && (
+        <MilestoneCelebration
+          milestone={milestone}
+          isOpen={milestoneOpen}
+          onClose={() => setMilestoneOpen(false)}
+          childName={selectedChild?.name}
+        />
+      )}
+
+      {/* Reflection Modal */}
+      {activePromptId && activePrompt && (
+        <ReflectionModal
+          isOpen={reflectionOpen}
+          onClose={() => {
+            setReflectionOpen(false)
+            setCompletingDuration(undefined)
+          }}
+          promptId={activePromptId}
+          promptTitle={activePrompt.title}
+          childId={selectedChildId}
+          faithMode={faithMode}
+          durationSeconds={completingDuration}
+          estimatedMinutes={activePrompt.estimated_minutes}
+          onComplete={handleReflectionComplete}
+        />
       )}
     </div>
   )

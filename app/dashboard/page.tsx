@@ -5,6 +5,7 @@ import Link from 'next/link'
 import SignOutButton from '@/components/SignOutButton'
 import DashboardClient from '@/components/DashboardClient'
 import CompletionCalendar from '@/components/CompletionCalendar'
+import AdminResetButton from '@/components/AdminResetButton'
 import { SUBSCRIPTION_STATUS, ROUTES } from '@/lib/constants'
 
 // Helper function to calculate age from birth_date
@@ -77,13 +78,17 @@ export default async function DashboardPage() {
   // Get today's prompt (first one for now - in future we can filter by date)
   const todaysPromptId = prompts[0]?.id
 
+  // Get today's date in user's local timezone
+  const today = new Date()
+  const localDateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
   // Check if user completed TODAY'S specific prompt
   const { data: completedTodayData } = await supabase
     .from('prompt_completions')
     .select('id')
     .eq('user_id', session.user.id)
     .eq('prompt_id', todaysPromptId)
-    .eq('completion_date', new Date().toISOString().split('T')[0])
+    .eq('completion_date', localDateString)
     .maybeSingle()
 
   const completedToday = !!completedTodayData
@@ -243,6 +248,9 @@ export default async function DashboardPage() {
           />
         </div>
       </main>
+
+      {/* Admin Reset Button (dev only) */}
+      <AdminResetButton userId={session.user.id} />
     </div>
   )
 }
