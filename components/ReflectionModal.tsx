@@ -81,10 +81,6 @@ export default function ReflectionModal({
         })
 
       if (insertError) {
-        // Check if it's a duplicate
-        if (insertError.code === '23505') {
-          throw new Error('You already completed this activity today!')
-        }
         throw insertError
       }
 
