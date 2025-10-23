@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
+import { toast } from 'sonner'
 
 interface ReflectionModalProps {
   isOpen: boolean
@@ -85,10 +86,18 @@ export default function ReflectionModal({
       // Call parent completion handler
       await onComplete(includeNote && reflectionNote.trim() ? reflectionNote.trim() : undefined)
 
+      // Show success toast
+      toast.success('Activity completed! 🎉', {
+        description: 'Great job connecting with your child today'
+      })
+
       // Close modal
       onClose()
     } catch (err: any) {
       console.error('Reflection submission error:', err)
+      toast.error('Failed to save', {
+        description: err.message || 'Please try again'
+      })
       setError(err.message || 'Failed to save reflection. Please try again.')
       setIsSubmitting(false)
     }

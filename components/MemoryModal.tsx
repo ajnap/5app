@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
+import { toast } from 'sonner'
 
 interface Child {
   id: string
@@ -89,14 +90,18 @@ export default function MemoryModal({ isOpen, onClose, children, userId }: Memor
 
       if (insertError) throw insertError
 
-      // Success - show message first, then close
-      alert('Memory captured ❤️')
+      // Success - show toast and close
+      toast.success('Memory captured ❤️', {
+        description: `Saved memory for ${children.find(c => c.id === selectedChildId)?.name}`
+      })
 
       // Close modal and reset
       onClose()
     } catch (err: any) {
       console.error('Memory save error:', err)
-      setError(err.message || 'Failed to save memory. Please try again.')
+      toast.error('Failed to save memory', {
+        description: err.message || 'Please try again'
+      })
       setIsSubmitting(false)
     }
   }
