@@ -8,6 +8,9 @@ import FavoriteButton from './FavoriteButton'
 import TodaysPromptCard from './TodaysPromptCard'
 import ReflectionModal from './ReflectionModal'
 import QuickMemoryButton from './QuickMemoryButton'
+import ConfettiCelebration from './ConfettiCelebration'
+import MilestoneCelebration, { detectMilestone, type Milestone } from './MilestoneCelebration'
+import EmptyState from './EmptyState'
 
 interface Child {
   id: string
@@ -24,6 +27,7 @@ interface Prompt {
   category: string
   age_categories: string[]
   tags: string[]
+  estimated_minutes?: number
 }
 
 interface DashboardClientProps {
@@ -32,6 +36,8 @@ interface DashboardClientProps {
   completedToday?: boolean
   faithMode?: boolean
   userId: string
+  currentStreak?: number
+  totalCompletions?: number
 }
 
 export default function DashboardClient({
@@ -39,7 +45,9 @@ export default function DashboardClient({
   prompts,
   completedToday: initialCompletedToday = false,
   faithMode = false,
-  userId
+  userId,
+  currentStreak = 0,
+  totalCompletions = 0
 }: DashboardClientProps) {
   const router = useRouter()
   const supabase = createBrowserClient(
@@ -53,6 +61,12 @@ export default function DashboardClient({
   const [completedToday, setCompletedToday] = useState(initialCompletedToday)
   const [reflectionOpen, setReflectionOpen] = useState(false)
   const [completingPromptId, setCompletingPromptId] = useState<string | null>(null)
+  const [completingDuration, setCompletingDuration] = useState<number | undefined>(undefined)
+
+  // Celebration states
+  const [showConfetti, setShowConfetti] = useState(false)
+  const [milestone, setMilestone] = useState<Milestone | null>(null)
+  const [milestoneOpen, setMilestoneOpen] = useState(false)
 
   // Get age category for selected child
   const getAgeCategory = (age: number): string => {
@@ -95,17 +109,52 @@ export default function DashboardClient({
 
   const selectedChild = children.find(c => c.id === selectedChildId)
 
-  // Handle marking prompt as complete - opens reflection modal
-  const handleMarkComplete = () => {
+  // Handle marking prompt as complete with timer
+  const handleMarkComplete = (durationSeconds?: number) => {
     if (!todaysPrompt.id) return
-    setCompletingPromptId(todaysPrompt.id)
-    setReflectionOpen(true)
+
+    // Trigger confetti immediately
+    setShowConfetti(true)
+
+    // Check for milestones
+    const isFirstCompletion = totalCompletions === 0
+    const detectedMilestone = detectMilestone(currentStreak + 1, isFirstCompletion)
+
+    if (detectedMilestone) {
+      setMilestone(detectedMilestone)
+      setMilestoneOpen(true)
+
+      // Delay reflection modal until after milestone
+      setTimeout(() => {
+        setCompletingPromptId(todaysPrompt.id)
+        setCompletingDuration(durationSeconds)
+        setReflectionOpen(true)
+      }, 4500) // Milestone auto-closes at 4s
+    } else {
+      // No milestone, open reflection immediately
+      setCompletingPromptId(todaysPrompt.id)
+      setCompletingDuration(durationSeconds)
+      setReflectionOpen(true)
+    }
   }
 
   // Handle completion from reflection modal
   const handleReflectionComplete = async (notes?: string) => {
     setCompletedToday(true)
     router.refresh() // Refresh to update streak counter
+  }
+
+  // Empty state for no children
+  if (children.length === 0) {
+    return (
+      <EmptyState
+        icon="👨‍👩‍👧‍👦"
+        title="Add Your First Child"
+        description="Get started by adding your child's profile to receive age-appropriate connection prompts personalized just for them."
+        actionLabel="Add Child Profile"
+        actionHref="/children"
+      />
+    )
   }
 
   return (
@@ -156,15 +205,36 @@ export default function DashboardClient({
         )}
       </div>
 
+      {/* Confetti Celebration */}
+      <ConfettiCelebration
+        trigger={showConfetti}
+        onComplete={() => setShowConfetti(false)}
+      />
+
+      {/* Milestone Celebration Modal */}
+      {milestone && (
+        <MilestoneCelebration
+          milestone={milestone}
+          isOpen={milestoneOpen}
+          onClose={() => setMilestoneOpen(false)}
+          childName={selectedChild?.name}
+        />
+      )}
+
       {/* Reflection Modal */}
       {completingPromptId && (
         <ReflectionModal
           isOpen={reflectionOpen}
-          onClose={() => setReflectionOpen(false)}
+          onClose={() => {
+            setReflectionOpen(false)
+            setCompletingDuration(undefined)
+          }}
           promptId={completingPromptId}
           promptTitle={todaysPrompt.title}
           childId={selectedChildId}
           faithMode={faithMode}
+          durationSeconds={completingDuration}
+          estimatedMinutes={todaysPrompt.estimated_minutes}
           onComplete={handleReflectionComplete}
         />
       )}

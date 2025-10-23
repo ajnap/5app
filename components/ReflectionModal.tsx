@@ -11,6 +11,8 @@ interface ReflectionModalProps {
   promptTitle: string
   childId: string | null
   faithMode: boolean
+  durationSeconds?: number
+  estimatedMinutes?: number
   onComplete: (notes?: string) => Promise<void>
 }
 
@@ -21,6 +23,8 @@ export default function ReflectionModal({
   promptTitle,
   childId,
   faithMode,
+  durationSeconds,
+  estimatedMinutes,
   onComplete,
 }: ReflectionModalProps) {
   const [reflectionNote, setReflectionNote] = useState('')
@@ -64,7 +68,7 @@ export default function ReflectionModal({
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      // Insert completion record with optional reflection note
+      // Insert completion record with optional reflection note and duration
       const { error: insertError } = await supabase
         .from('prompt_completions')
         .insert({
@@ -73,6 +77,7 @@ export default function ReflectionModal({
           child_id: childId,
           completed_at: new Date().toISOString(),
           reflection_note: includeNote && reflectionNote.trim() ? reflectionNote.trim() : null,
+          duration_seconds: durationSeconds || null,
         })
 
       if (insertError) {
@@ -109,6 +114,17 @@ export default function ReflectionModal({
   const secularQuestion = 'How did it go? Any special moments?'
   const question = faithMode ? faithQuestion : secularQuestion
 
+  // Format duration for display
+  const formatDuration = (seconds?: number) => {
+    if (!seconds) return null
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return mins > 0 ? `${mins} minute${mins !== 1 ? 's' : ''}` : `${secs} seconds`
+  }
+
+  const durationText = formatDuration(durationSeconds)
+  const isOverEstimate = estimatedMinutes && durationSeconds && durationSeconds > estimatedMinutes * 60
+
   return (
     <>
       {/* Backdrop */}
@@ -131,6 +147,20 @@ export default function ReflectionModal({
             <p className="text-gray-600">
               You just completed: <span className="font-semibold">{promptTitle}</span>
             </p>
+
+            {/* Duration Display */}
+            {durationText && (
+              <div className="mt-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border-2 border-green-200">
+                <p className="text-green-900 font-semibold text-center">
+                  ⏱️ You spent {durationText} connecting today!
+                </p>
+                {isOverEstimate && (
+                  <p className="text-green-700 text-sm text-center mt-1">
+                    Taking your time shows how much you care 💛
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Reflection Question */}

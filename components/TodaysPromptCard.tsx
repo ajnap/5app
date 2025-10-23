@@ -1,5 +1,8 @@
 'use client'
 
+import { useState } from 'react'
+import ActivityTimer from './ActivityTimer'
+
 interface Prompt {
   id: string
   title: string
@@ -8,6 +11,7 @@ interface Prompt {
   category: string
   age_categories: string[]
   tags: string[]
+  estimated_minutes?: number
 }
 
 interface TodaysPromptCardProps {
@@ -15,7 +19,7 @@ interface TodaysPromptCardProps {
   childName: string
   childAge: number
   completedToday: boolean
-  onMarkComplete: () => void
+  onMarkComplete: (durationSeconds?: number) => void
 }
 
 export default function TodaysPromptCard({
@@ -25,6 +29,8 @@ export default function TodaysPromptCard({
   completedToday,
   onMarkComplete,
 }: TodaysPromptCardProps) {
+  const [timerActive, setTimerActive] = useState(false)
+
   if (!prompt) {
     return (
       <div className="card bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 fade-in">
@@ -54,8 +60,12 @@ export default function TodaysPromptCard({
 
   const categoryStyle = categoryColors[prompt.category.toLowerCase()] || categoryColors.fun
 
-  // Estimated time - simple heuristic based on description length
-  const estimatedMinutes = prompt.activity.length > 200 ? '10-15 min' : '5-10 min'
+  // Get estimated time from prompt or use default
+  const estimatedMinutes = prompt.estimated_minutes || 10
+
+  const handleTimerComplete = (durationSeconds: number) => {
+    onMarkComplete(durationSeconds)
+  }
 
   if (completedToday) {
     return (
@@ -96,7 +106,7 @@ export default function TodaysPromptCard({
           {prompt.category}
         </span>
         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border-2 border-gray-300">
-          ⏱️ {estimatedMinutes}
+          ⏱️ {estimatedMinutes} min
         </span>
         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border-2 border-blue-300">
           Age {childAge} • {childName}
@@ -116,18 +126,29 @@ export default function TodaysPromptCard({
         </div>
       </div>
 
-      {/* CTA Button */}
-      <button
-        onClick={onMarkComplete}
-        className="w-full bg-gradient-to-r from-primary-600 to-primary-700 text-white px-8 py-5 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
-      >
-        Mark as Complete
-      </button>
+      {/* Activity Timer or CTA Button */}
+      {!timerActive ? (
+        <>
+          <button
+            onClick={() => setTimerActive(true)}
+            className="w-full bg-gradient-to-r from-primary-600 to-primary-700 text-white px-8 py-5 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+          >
+            Start Activity Timer
+          </button>
 
-      {/* Encouragement */}
-      <p className="text-center text-sm text-gray-600 mt-4">
-        This moment will create a lasting memory for {childName} ❤️
-      </p>
+          {/* Encouragement */}
+          <p className="text-center text-sm text-gray-600 mt-4">
+            This moment will create a lasting memory for {childName} ❤️
+          </p>
+        </>
+      ) : (
+        <ActivityTimer
+          isActive={timerActive}
+          estimatedMinutes={estimatedMinutes}
+          promptId={prompt.id}
+          onComplete={handleTimerComplete}
+        />
+      )}
     </div>
   )
 }

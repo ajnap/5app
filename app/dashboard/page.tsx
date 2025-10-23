@@ -190,12 +190,19 @@ export default async function DashboardPage() {
               {/* Streak Card */}
               <div className="card bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200">
                 <div className="flex items-center gap-4">
-                  <div className="text-5xl">🔥</div>
+                  <div className="text-5xl">{currentStreak > 0 ? '🔥' : '🌱'}</div>
                   <div>
-                    <p className="text-3xl font-bold text-orange-900">{currentStreak}</p>
-                    <p className="text-orange-700 font-medium">Day Streak</p>
-                    {currentStreak > 0 && (
-                      <p className="text-sm text-orange-600 mt-1">Keep it going!</p>
+                    {currentStreak > 0 ? (
+                      <>
+                        <p className="text-3xl font-bold text-orange-900">{currentStreak}</p>
+                        <p className="text-orange-700 font-medium">Day Streak</p>
+                        <p className="text-sm text-orange-600 mt-1">Keep it going!</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-2xl font-bold text-orange-900">Start Your Journey!</p>
+                        <p className="text-orange-700 font-medium text-sm">Complete today's activity to begin your streak</p>
+                      </>
                     )}
                   </div>
                 </div>
@@ -231,6 +238,8 @@ export default async function DashboardPage() {
             completedToday={completedToday}
             faithMode={faithMode}
             userId={session.user.id}
+            currentStreak={currentStreak}
+            totalCompletions={totalCompletions}
           />
         </div>
       </main>
