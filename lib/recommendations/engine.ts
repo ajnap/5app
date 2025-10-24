@@ -26,6 +26,8 @@ export async function generateRecommendations(
   const startTime = Date.now()
   const { userId, childId, faithMode, limit = 5 } = request
 
+  console.log(`[Recommendations] Starting for child ${childId}, faithMode: ${faithMode}`)
+
   try {
     // 1. Fetch all required data in parallel
     const [child, completionHistory, allPrompts, favorites] = await Promise.all([
@@ -34,6 +36,8 @@ export async function generateRecommendations(
       fetchAllPrompts(supabase),
       fetchFavorites(userId, supabase)
     ])
+
+    console.log(`[Recommendations] Fetched data - child: ${child?.name}, completions: ${completionHistory.length}, prompts: ${allPrompts.length}`)
 
     if (!child) {
       throw new Error('Child not found')
@@ -243,6 +247,7 @@ function getStarterRecommendations(
 ): RecommendationResult {
   // Filter age-appropriate prompts
   const ageAppropriate = allPrompts.filter(p => applyAgeFilter(p, child.age))
+  console.log(`[Recommendations] Starter: age-appropriate prompts for ${child.name} (age ${child.age}): ${ageAppropriate.length}`)
 
   // Filter by faith mode (but don't exclude everything if none match)
   let faithFiltered = ageAppropriate.filter(p => {
@@ -252,10 +257,11 @@ function getStarterRecommendations(
       return !p.tags?.includes('faith-based') && !p.tags?.includes('christian')
     }
   })
+  console.log(`[Recommendations] Starter: after faith filter (faithMode: ${faithMode}): ${faithFiltered.length}`)
 
   // Fallback: if faith filter resulted in no prompts, use all age-appropriate prompts
   if (faithFiltered.length === 0) {
-    console.log(`[Recommendations] Faith mode filter returned 0 prompts for ${child.name}, using all age-appropriate prompts`)
+    console.log(`[Recommendations] Starter: Faith mode filter returned 0 prompts for ${child.name}, using all age-appropriate prompts`)
     faithFiltered = ageAppropriate
   }
 
