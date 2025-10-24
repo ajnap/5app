@@ -10,13 +10,6 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'The Next 5 Minutes - Daily Parenting Connections',
   description: 'Get a daily 5-minute parenting connection prompt to strengthen your relationship with your child',
-  icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico', sizes: 'any' },
-    ],
-    apple: '/apple-icon.png',
-  },
   metadataBase: new URL('https://5app-d22y33qyj-alex-napierskis-projects.vercel.app'),
   openGraph: {
     title: 'The Next 5 Minutes - Daily Parenting Connections',
