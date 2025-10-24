@@ -11,6 +11,8 @@ import QuickMemoryButton from './QuickMemoryButton'
 import ConfettiCelebration from './ConfettiCelebration'
 import MilestoneCelebration, { detectMilestone, type Milestone } from './MilestoneCelebration'
 import EmptyState from './EmptyState'
+import RecommendationSection from './RecommendationSection'
+import type { RecommendationResult } from '@/lib/recommendations/types'
 
 interface Child {
   id: string
@@ -38,6 +40,7 @@ interface DashboardClientProps {
   userId: string
   currentStreak?: number
   totalCompletions?: number
+  recommendationsMap?: Record<string, RecommendationResult>
 }
 
 export default function DashboardClient({
@@ -47,7 +50,8 @@ export default function DashboardClient({
   faithMode = false,
   userId,
   currentStreak = 0,
-  totalCompletions = 0
+  totalCompletions = 0,
+  recommendationsMap = {}
 }: DashboardClientProps) {
   const router = useRouter()
   const supabase = createBrowserClient(
@@ -141,7 +145,35 @@ export default function DashboardClient({
   // Handle completion from reflection modal
   const handleReflectionComplete = async (notes?: string) => {
     setCompletedToday(true)
-    router.refresh() // Refresh to update streak counter
+    router.refresh() // Refresh to update streak counter and recommendations
+  }
+
+  // Handle starting activity from recommendations
+  const handleStartActivity = (promptId: string, childId: string) => {
+    const prompt = prompts.find(p => p.id === promptId)
+    if (!prompt) return
+
+    setSelectedChildId(childId)
+    setCompletingPromptId(promptId)
+
+    // Trigger confetti
+    setShowConfetti(true)
+
+    // Check for milestones
+    const isFirstCompletion = totalCompletions === 0
+    const detectedMilestone = detectMilestone(currentStreak + 1, isFirstCompletion)
+
+    if (detectedMilestone) {
+      setMilestone(detectedMilestone)
+      setMilestoneOpen(true)
+
+      // Delay reflection modal
+      setTimeout(() => {
+        setReflectionOpen(true)
+      }, 4500)
+    } else {
+      setReflectionOpen(true)
+    }
   }
 
   // Empty state for no children
@@ -188,6 +220,16 @@ export default function DashboardClient({
           onMarkComplete={handleMarkComplete}
         />
 
+        {/* Smart Recommendations - show for selected child */}
+        {selectedChild && recommendationsMap[selectedChild.id] && recommendationsMap[selectedChild.id].recommendations.length > 0 && (
+          <RecommendationSection
+            childId={selectedChild.id}
+            childName={selectedChild.name}
+            recommendations={recommendationsMap[selectedChild.id].recommendations}
+            onStartActivity={handleStartActivity}
+          />
+        )}
+
         {/* More Prompts Teaser */}
         {filteredPrompts.length > 1 && (
           <div className="text-center fade-in">
@@ -230,11 +272,11 @@ export default function DashboardClient({
             setCompletingDuration(undefined)
           }}
           promptId={completingPromptId}
-          promptTitle={todaysPrompt.title}
+          promptTitle={prompts.find(p => p.id === completingPromptId)?.title || todaysPrompt.title}
           childId={selectedChildId}
           faithMode={faithMode}
           durationSeconds={completingDuration}
-          estimatedMinutes={todaysPrompt.estimated_minutes}
+          estimatedMinutes={prompts.find(p => p.id === completingPromptId)?.estimated_minutes || todaysPrompt.estimated_minutes}
           onComplete={handleReflectionComplete}
         />
       )}

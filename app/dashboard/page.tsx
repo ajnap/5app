@@ -7,6 +7,8 @@ import DashboardClient from '@/components/DashboardClient'
 import CompletionCalendar from '@/components/CompletionCalendar'
 import AdminResetButton from '@/components/AdminResetButton'
 import { SUBSCRIPTION_STATUS, ROUTES } from '@/lib/constants'
+import { generateRecommendations } from '@/lib/recommendations/engine'
+import type { RecommendationResult } from '@/lib/recommendations/types'
 
 // Helper function to calculate age from birth_date
 function calculateAge(birthDate: string): number {
@@ -123,6 +125,37 @@ export default async function DashboardPage() {
     date,
     count
   }))
+
+  // Generate recommendations for each child
+  const recommendationsMap: Record<string, RecommendationResult> = {}
+
+  for (const child of children) {
+    try {
+      const recommendations = await generateRecommendations(
+        {
+          userId: session.user.id,
+          childId: child.id,
+          faithMode,
+          limit: 5
+        },
+        supabase
+      )
+      recommendationsMap[child.id] = recommendations
+    } catch (error) {
+      console.error(`Failed to generate recommendations for child ${child.id}:`, error)
+      // Fallback: empty recommendations
+      recommendationsMap[child.id] = {
+        childId: child.id,
+        recommendations: [],
+        metadata: {
+          totalCompletions: 0,
+          categoryDistribution: {},
+          timestamp: new Date().toISOString(),
+          cacheKey: ''
+        }
+      }
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -245,6 +278,7 @@ export default async function DashboardPage() {
             userId={session.user.id}
             currentStreak={currentStreak}
             totalCompletions={totalCompletions}
+            recommendationsMap={recommendationsMap}
           />
         </div>
       </main>
