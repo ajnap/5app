@@ -131,6 +131,7 @@ export default async function DashboardPage() {
 
   for (const child of children) {
     try {
+      console.log(`[Dashboard] Generating recommendations for child ${child.name} (${child.id})`)
       const recommendations = await generateRecommendations(
         {
           userId: session.user.id,
@@ -140,9 +141,10 @@ export default async function DashboardPage() {
         },
         supabase
       )
+      console.log(`[Dashboard] Generated ${recommendations.recommendations.length} recommendations for ${child.name}`)
       recommendationsMap[child.id] = recommendations
     } catch (error) {
-      console.error(`Failed to generate recommendations for child ${child.id}:`, error)
+      console.error(`[Dashboard] Failed to generate recommendations for child ${child.id}:`, error)
       // Fallback: empty recommendations
       recommendationsMap[child.id] = {
         childId: child.id,
@@ -156,6 +158,8 @@ export default async function DashboardPage() {
       }
     }
   }
+
+  console.log(`[Dashboard] Total children: ${children.length}, Recommendations map:`, Object.keys(recommendationsMap))
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
