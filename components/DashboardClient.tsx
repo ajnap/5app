@@ -72,7 +72,14 @@ export default function DashboardClient({
       childIdInResult: rec.childId,
       count: rec.recommendations.length
     })))
-  }, [children, recommendationsMap])
+    console.log('[DashboardClient] Selected child ID:', selectedChildId)
+    if (selectedChildId) {
+      const child = children.find(c => c.id === selectedChildId)
+      console.log('[DashboardClient] Selected child:', child)
+      console.log('[DashboardClient] Has recommendations?', !!recommendationsMap[selectedChildId])
+      console.log('[DashboardClient] Recommendation count:', recommendationsMap[selectedChildId]?.recommendations?.length || 0)
+    }
+  }, [children, recommendationsMap, selectedChildId])
   const [completedToday, setCompletedToday] = useState(initialCompletedToday)
   const [reflectionOpen, setReflectionOpen] = useState(false)
   const [completingPromptId, setCompletingPromptId] = useState<string | null>(null)
