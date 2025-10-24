@@ -1,6 +1,4 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 
 // Client-side Supabase client (use in client components)
 export const createClient = () =>
@@ -9,22 +7,10 @@ export const createClient = () =>
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-// Server-side Supabase client (use in server components and API routes)
-export const createServerClient = () => {
-  const cookieStore = cookies()
-
-  return createSupabaseServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
-}
+// Server-side Supabase client - DEPRECATED
+// Use @/lib/supabase-server instead for Server Components
+// Use @/lib/supabase-server-api instead for API Routes
+export { createServerClient } from '@/lib/supabase-server'
 
 // Database type definitions
 export type Profile = {

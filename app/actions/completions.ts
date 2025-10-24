@@ -1,22 +1,10 @@
 'use server'
 
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createServerClient } from '@/lib/supabase-server'
 import { revalidatePath } from 'next/cache'
 
 export async function markPromptComplete(promptId: string, notes?: string) {
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
+  const supabase = await createServerClient()
 
   // Get the current user
   const { data: { session } } = await supabase.auth.getSession()
@@ -58,18 +46,7 @@ export async function markPromptComplete(promptId: string, notes?: string) {
 }
 
 export async function unmarkPromptComplete(promptId: string) {
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
+  const supabase = await createServerClient()
 
   // Get the current user
   const { data: { session } } = await supabase.auth.getSession()
@@ -97,18 +74,7 @@ export async function unmarkPromptComplete(promptId: string) {
 }
 
 export async function getPromptCompletion(promptId: string) {
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
+  const supabase = await createServerClient()
 
   // Get the current user
   const { data: { session } } = await supabase.auth.getSession()
@@ -129,18 +95,7 @@ export async function getPromptCompletion(promptId: string) {
 }
 
 export async function getUserCompletionStats(userId: string) {
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
+  const supabase = await createServerClient()
 
   // Get total completions
   const { count: totalCompletions } = await supabase
