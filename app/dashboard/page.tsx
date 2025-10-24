@@ -173,26 +173,26 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       {/* Navigation */}
       <nav className="container mx-auto px-6 py-6 fade-in">
-        <div className="flex justify-between items-center backdrop-blur-sm bg-white/30 rounded-2xl px-6 py-3 shadow-sm">
+        <div className="flex justify-between items-center backdrop-blur-md bg-white/40 rounded-2xl px-6 py-3 shadow-lg border border-white/50">
           <h1 className="text-2xl font-bold gradient-text">The Next 5 Minutes</h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-700 font-medium hidden md:block">{session.user.email}</span>
             <Link
               href="/favorites"
-              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+              className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-200 hover:scale-110"
               title="My Favorites"
             >
               ❤️
             </Link>
             <Link
               href="/children"
-              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+              className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-200 px-3 py-1.5 rounded-lg hover:bg-white/60"
             >
               Children
             </Link>
             <Link
               href={ROUTES.ACCOUNT}
-              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+              className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-200 px-3 py-1.5 rounded-lg hover:bg-white/60"
             >
               Account
             </Link>
@@ -206,7 +206,7 @@ export default async function DashboardPage() {
         <div className="max-w-4xl mx-auto">
           {/* Subscription Status Banner */}
           {!isPremium && (
-            <div className="card bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 mb-8 fade-in">
+            <div className="card bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 border-2 border-amber-300 mb-8 fade-in shadow-lg hover:shadow-xl transition-all duration-300">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                   <p className="text-amber-900 font-bold text-lg mb-1">🌟 Unlock Full Access</p>
@@ -214,7 +214,7 @@ export default async function DashboardPage() {
                 </div>
                 <Link
                   href={ROUTES.ACCOUNT}
-                  className="btn-primary whitespace-nowrap"
+                  className="btn-primary whitespace-nowrap pulse-glow"
                 >
                   Upgrade Now
                 </Link>
@@ -223,22 +223,24 @@ export default async function DashboardPage() {
           )}
 
           {/* Today's Date */}
-          <div className="text-center mb-6 fade-in">
-            <p className="text-gray-600 text-lg font-medium">
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </p>
+          <div className="text-center mb-8 fade-in">
+            <div className="inline-block bg-gradient-to-r from-primary-50 via-purple-50 to-pink-50 px-8 py-4 rounded-2xl border-2 border-primary-100 shadow-md">
+              <p className="text-primary-600 text-xs uppercase tracking-widest font-bold mb-2">Today</p>
+              <p className="text-gray-900 text-3xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
+                {new Date().toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
+            </div>
           </div>
 
           {/* Progress Stats */}
           {(currentStreak > 0 || totalCompletions > 0) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 fade-in">
               {/* Streak Card */}
-              <div className="card bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200">
+              <div className="card bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 border-2 border-orange-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center gap-4">
                   <div className="text-5xl">{currentStreak > 0 ? '🔥' : '🌱'}</div>
                   <div>
@@ -259,7 +261,7 @@ export default async function DashboardPage() {
               </div>
 
               {/* Total Completions Card */}
-              <div className="card bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
+              <div className="card bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center gap-4">
                   <div className="text-5xl">✅</div>
                   <div>

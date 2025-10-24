@@ -76,7 +76,7 @@ export default function ChildSelector({ children, selectedChildId, onSelectChild
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full bg-white border-2 border-gray-200 rounded-xl px-6 py-4 flex items-center justify-between hover:border-primary-400 focus:border-primary-500 focus:outline-none transition-colors shadow-sm hover:shadow-md"
+          className="w-full bg-gradient-to-br from-white to-primary-50/30 border-2 border-gray-200 rounded-xl px-6 py-4 flex items-center justify-between hover:border-primary-400 focus:border-primary-500 focus:outline-none transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-0.5"
         >
           {selectedChild ? (
             <div className="flex items-center gap-4">
@@ -109,7 +109,7 @@ export default function ChildSelector({ children, selectedChildId, onSelectChild
 
         {/* Dropdown Menu */}
         {isOpen && (
-          <div className="absolute z-10 w-full mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-xl overflow-hidden">
+          <div className="absolute z-10 w-full mt-2 bg-white border-2 border-primary-200 rounded-xl shadow-2xl overflow-hidden scale-in">
             {/* All Children Option */}
             <button
               type="button"
@@ -117,8 +117,8 @@ export default function ChildSelector({ children, selectedChildId, onSelectChild
                 onSelectChild(null)
                 setIsOpen(false)
               }}
-              className={`w-full px-6 py-4 flex items-center gap-4 hover:bg-primary-50 transition-colors border-b border-gray-100 ${
-                !selectedChildId ? 'bg-primary-50' : ''
+              className={`w-full px-6 py-4 flex items-center gap-4 hover:bg-primary-50 transition-all duration-200 border-b border-gray-100 transform hover:translate-x-1 ${
+                !selectedChildId ? 'bg-primary-50 border-l-4 border-l-primary-500' : ''
               }`}
             >
               <span className="text-3xl">👨‍👩‍👧‍👦</span>
@@ -146,8 +146,8 @@ export default function ChildSelector({ children, selectedChildId, onSelectChild
                   onSelectChild(child.id)
                   setIsOpen(false)
                 }}
-                className={`w-full px-6 py-4 flex items-center gap-4 hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0 ${
-                  selectedChildId === child.id ? 'bg-primary-50' : ''
+                className={`w-full px-6 py-4 flex items-center gap-4 hover:bg-primary-50 transition-all duration-200 border-b border-gray-100 last:border-b-0 transform hover:translate-x-1 ${
+                  selectedChildId === child.id ? 'bg-primary-50 border-l-4 border-l-primary-500' : ''
                 }`}
               >
                 <span className="text-3xl">{getAgeEmoji(child.age)}</span>
@@ -172,7 +172,7 @@ export default function ChildSelector({ children, selectedChildId, onSelectChild
             {/* Add New Child Option */}
             <Link
               href="/children/new"
-              className="w-full px-6 py-4 flex items-center gap-4 hover:bg-green-50 transition-colors text-green-700 font-semibold border-t-2 border-green-100"
+              className="w-full px-6 py-4 flex items-center gap-4 hover:bg-green-50 transition-all duration-200 text-green-700 font-semibold border-t-2 border-green-100 transform hover:translate-x-1"
               onClick={() => setIsOpen(false)}
             >
               <span className="text-3xl">+</span>

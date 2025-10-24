@@ -87,7 +87,7 @@ export default function TodaysPromptCard({
   }
 
   return (
-    <div className="card bg-gradient-to-br from-white to-blue-50 border-4 border-primary-200 hover:border-primary-300 transition-all duration-300 fade-in">
+    <div className="card bg-gradient-to-br from-white via-blue-50/50 to-purple-50/30 border-4 border-primary-200 hover:border-primary-300 transition-all duration-300 fade-in shadow-xl hover:shadow-2xl">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div>
@@ -114,7 +114,7 @@ export default function TodaysPromptCard({
       </div>
 
       {/* Description */}
-      <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 mb-6 shadow-md border border-gray-100">
         <p className="text-gray-700 text-lg leading-relaxed mb-4">
           {prompt.description}
         </p>
@@ -131,7 +131,7 @@ export default function TodaysPromptCard({
         <>
           <button
             onClick={() => setTimerActive(true)}
-            className="w-full bg-gradient-to-r from-primary-600 to-primary-700 text-white px-8 py-5 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+            className="w-full bg-gradient-to-r from-primary-600 via-primary-700 to-purple-600 text-white px-8 py-5 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 hover:-translate-y-1 pulse-glow"
           >
             Start Activity Timer
           </button>

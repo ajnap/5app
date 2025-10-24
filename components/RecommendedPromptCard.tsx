@@ -36,9 +36,9 @@ export default function RecommendedPromptCard({
   const primaryReason = reasons[0]?.message || 'Recommended for you'
 
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-2 border-primary-100 overflow-hidden">
+    <div className="bg-gradient-to-br from-white to-primary-50/20 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-primary-100 hover:border-primary-300 overflow-hidden glow-on-hover">
       {/* Header with badge */}
-      <div className="bg-gradient-to-r from-primary-50 to-purple-50 px-4 py-3 flex items-center justify-between">
+      <div className="bg-gradient-to-r from-primary-50 via-purple-50 to-pink-50 px-4 py-3 flex items-center justify-between border-b border-primary-100">
         <div className="flex items-center gap-2">
           <span className="text-2xl" aria-label={`Category: ${prompt.category}`}>
             {categoryEmoji}
@@ -108,7 +108,7 @@ export default function RecommendedPromptCard({
         <div className="flex gap-2">
           <button
             onClick={() => onStartActivity(prompt.id)}
-            className="flex-1 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-4 py-2.5 rounded-lg font-semibold shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+            className="flex-1 bg-gradient-to-r from-primary-600 via-primary-700 to-purple-600 text-white px-4 py-2.5 rounded-lg font-semibold shadow-md hover:shadow-xl transform hover:scale-105 hover:-translate-y-0.5 transition-all duration-200"
             aria-label={`Start activity: ${prompt.title} for ${childName}`}
           >
             Start Activity
