@@ -74,18 +74,28 @@ export async function generateRecommendations(
         return false
       }
 
-      // Faith mode filter
+      return true
+    })
+
+    // Apply faith mode filter separately (with fallback)
+    let faithFilteredPrompts = eligiblePrompts.filter(prompt => {
       if (faithMode) {
         return prompt.tags?.includes('faith-based') || prompt.tags?.includes('christian')
       } else {
         return !prompt.tags?.includes('faith-based') && !prompt.tags?.includes('christian')
       }
-
-      return true
     })
 
+    // Fallback: if faith filter excluded everything, use all eligible prompts
+    if (faithFilteredPrompts.length === 0 && eligiblePrompts.length > 0) {
+      console.log(`[Recommendations] Faith mode filter returned 0 prompts for ${child.name}, using all eligible prompts`)
+      faithFilteredPrompts = eligiblePrompts
+    }
+
+    const finalEligiblePrompts = faithFilteredPrompts
+
     // Check if we exhausted all prompts
-    if (eligiblePrompts.length === 0) {
+    if (finalEligiblePrompts.length === 0) {
       return getGreatestHitsRecommendations(
         child,
         completionHistory,
@@ -98,7 +108,7 @@ export async function generateRecommendations(
 
     // 5. Score all eligible prompts
     const scoredPrompts = await Promise.all(
-      eligiblePrompts.map(async (prompt) => {
+      finalEligiblePrompts.map(async (prompt) => {
         const scoreComponents = await calculatePromptScore(
           prompt,
           child,
@@ -234,14 +244,20 @@ function getStarterRecommendations(
   // Filter age-appropriate prompts
   const ageAppropriate = allPrompts.filter(p => applyAgeFilter(p, child.age))
 
-  // Filter by faith mode
-  const faithFiltered = ageAppropriate.filter(p => {
+  // Filter by faith mode (but don't exclude everything if none match)
+  let faithFiltered = ageAppropriate.filter(p => {
     if (faithMode) {
       return p.tags?.includes('faith-based') || p.tags?.includes('christian')
     } else {
       return !p.tags?.includes('faith-based') && !p.tags?.includes('christian')
     }
   })
+
+  // Fallback: if faith filter resulted in no prompts, use all age-appropriate prompts
+  if (faithFiltered.length === 0) {
+    console.log(`[Recommendations] Faith mode filter returned 0 prompts for ${child.name}, using all age-appropriate prompts`)
+    faithFiltered = ageAppropriate
+  }
 
   // Prefer 5-minute activities for easy first win
   const quickWins = faithFiltered.filter(p => p.estimated_minutes === 5)
