@@ -12,8 +12,8 @@ test.describe('Landing Page', () => {
     // Check page title
     await expect(page).toHaveTitle(/The Next 5 Minutes/)
 
-    // Check main heading is visible
-    await expect(page.getByRole('heading', { name: /Next 5 Minutes/i })).toBeVisible()
+    // Check main heading is visible (h2 in hero section)
+    await expect(page.getByRole('heading', { name: /strengthen your bond/i })).toBeVisible()
   })
 
   test('should have working navigation to signup', async ({ page }) => {
@@ -31,7 +31,7 @@ test.describe('Landing Page', () => {
     await page.goto('/')
 
     // Check for content about 5-minute activities
-    await expect(page.getByText(/5.minute/i)).toBeVisible()
+    await expect(page.getByText(/just 5 minutes/i)).toBeVisible()
   })
 })
 
