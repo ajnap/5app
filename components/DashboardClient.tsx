@@ -201,7 +201,7 @@ export default function DashboardClient({
 
         {/* Personalization Badge */}
         {selectedChild && (
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 fade-in">
+          <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 rounded-xl p-4 border-2 border-green-200 fade-in shadow-md hover:shadow-lg transition-all duration-300">
             <p className="text-green-900 font-semibold flex items-center gap-2">
               <span className="text-2xl">✨</span>
               <span>
@@ -250,7 +250,7 @@ export default function DashboardClient({
             </p>
             <a
               href="/prompts"
-              className="inline-flex items-center gap-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-primary-600 via-primary-700 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-300 pulse-glow"
             >
               <span className="text-2xl">📚</span>
               Browse All Prompts

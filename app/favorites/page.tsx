@@ -64,7 +64,7 @@ export default async function FavoritesPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       {/* Navigation */}
       <nav className="container mx-auto px-6 py-6 fade-in">
-        <div className="flex justify-between items-center backdrop-blur-sm bg-white/30 rounded-2xl px-6 py-3 shadow-sm">
+        <div className="flex justify-between items-center backdrop-blur-md bg-white/40 rounded-2xl px-6 py-3 shadow-lg border border-white/50">
           <Link href="/dashboard" className="text-2xl font-bold gradient-text hover:opacity-80 transition-opacity">
             The Next 5 Minutes
           </Link>
@@ -72,25 +72,25 @@ export default async function FavoritesPage() {
             <span className="text-sm text-gray-700 font-medium hidden md:block">{session.user.email}</span>
             <Link
               href="/dashboard"
-              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+              className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-200 px-3 py-1.5 rounded-lg hover:bg-white/60"
             >
               Dashboard
             </Link>
             <Link
               href="/prompts"
-              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+              className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-200 px-3 py-1.5 rounded-lg hover:bg-white/60"
             >
               Browse
             </Link>
             <Link
               href="/children"
-              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+              className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-200 px-3 py-1.5 rounded-lg hover:bg-white/60"
             >
               Children
             </Link>
             <Link
               href={ROUTES.ACCOUNT}
-              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
+              className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-200 px-3 py-1.5 rounded-lg hover:bg-white/60"
             >
               Account
             </Link>
