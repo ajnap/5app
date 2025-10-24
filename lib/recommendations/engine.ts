@@ -46,15 +46,20 @@ export async function generateRecommendations(
     )
 
     // 3. Handle special cases
+    console.log(`[Recommendations] Child ${child.name} has ${completionHistory.length} completions`)
+
     if (completionHistory.length < 3) {
       // New user: return starter recommendations
-      return getStarterRecommendations(
+      console.log(`[Recommendations] Using starter recommendations for ${child.name}`)
+      const starters = getStarterRecommendations(
         child,
         allPrompts,
         faithMode,
         limit,
         categoryDistribution
       )
+      console.log(`[Recommendations] Generated ${starters.recommendations.length} starter recommendations`)
+      return starters
     }
 
     // 4. Filter eligible prompts

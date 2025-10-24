@@ -159,7 +159,15 @@ export default async function DashboardPage() {
     }
   }
 
-  console.log(`[Dashboard] Total children: ${children.length}, Recommendations map:`, Object.keys(recommendationsMap))
+  console.log(`[Dashboard] Total children: ${children.length}`)
+  console.log(`[Dashboard] Children IDs:`, children.map(c => `${c.name}: ${c.id}`))
+  console.log(`[Dashboard] Recommendations map keys:`, Object.keys(recommendationsMap))
+
+  // Log each child's recommendation count
+  for (const child of children) {
+    const recs = recommendationsMap[child.id]
+    console.log(`[Dashboard] ${child.name} (${child.id}): ${recs?.recommendations?.length || 0} recommendations`)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
