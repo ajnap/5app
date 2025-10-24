@@ -28,6 +28,17 @@ const config = {
     '!**/.next/**',
     '!**/coverage/**',
   ],
+  // Use node environment for API route tests
+  testEnvironmentOptions: {
+    customExportConditions: [''],
+  },
+  globals: {
+    'ts-jest': {
+      tsconfig: {
+        jsx: 'react',
+      },
+    },
+  },
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
