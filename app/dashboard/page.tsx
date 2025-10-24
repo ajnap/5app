@@ -9,6 +9,7 @@ import AdminResetButton from '@/components/AdminResetButton'
 import { SUBSCRIPTION_STATUS, ROUTES } from '@/lib/constants'
 import { generateRecommendations } from '@/lib/recommendations/engine'
 import type { RecommendationResult } from '@/lib/recommendations/types'
+import { captureError } from '@/lib/sentry'
 
 // Helper function to calculate age from birth_date
 function calculateAge(birthDate: string): number {
@@ -142,7 +143,17 @@ export default async function DashboardPage() {
       )
       recommendationsMap[child.id] = recommendations
     } catch (error) {
-      console.error(`[Dashboard] Failed to generate recommendations for child ${child.id}:`, error)
+      captureError(error, {
+        tags: {
+          component: 'dashboard',
+          operation: 'generate-recommendations'
+        },
+        extra: {
+          childId: child.id,
+          childName: child.name,
+          userId: session.user.id
+        }
+      })
       // Fallback: empty recommendations
       recommendationsMap[child.id] = {
         childId: child.id,
