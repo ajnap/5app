@@ -63,23 +63,6 @@ export default function DashboardClient({
     children.length === 1 ? children[0].id : null
   )
 
-  // Debug logging
-  useEffect(() => {
-    console.log('[DashboardClient] Children:', children.map(c => ({ name: c.name, id: c.id })))
-    console.log('[DashboardClient] Recommendations map keys:', Object.keys(recommendationsMap))
-    console.log('[DashboardClient] Recommendations map:', Object.entries(recommendationsMap).map(([id, rec]) => ({
-      mapKey: id,
-      childIdInResult: rec.childId,
-      count: rec.recommendations.length
-    })))
-    console.log('[DashboardClient] Selected child ID:', selectedChildId)
-    if (selectedChildId) {
-      const child = children.find(c => c.id === selectedChildId)
-      console.log('[DashboardClient] Selected child:', child)
-      console.log('[DashboardClient] Has recommendations?', !!recommendationsMap[selectedChildId])
-      console.log('[DashboardClient] Recommendation count:', recommendationsMap[selectedChildId]?.recommendations?.length || 0)
-    }
-  }, [children, recommendationsMap, selectedChildId])
   const [completedToday, setCompletedToday] = useState(initialCompletedToday)
   const [reflectionOpen, setReflectionOpen] = useState(false)
   const [completingPromptId, setCompletingPromptId] = useState<string | null>(null)
@@ -239,26 +222,14 @@ export default function DashboardClient({
         />
 
         {/* Smart Recommendations - show for selected child */}
-        {selectedChild && recommendationsMap[selectedChild.id]?.recommendations?.length > 0 ? (
-          <>
-            <RecommendationSection
-              childId={selectedChild.id}
-              childName={selectedChild.name}
-              recommendations={recommendationsMap[selectedChild.id].recommendations}
-              onStartActivity={handleStartActivity}
-            />
-          </>
-        ) : selectedChild && Object.keys(recommendationsMap).length > 0 ? (
-          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-6 mb-8">
-            <p className="text-yellow-900 font-semibold">
-              🔧 Debug: No recommendations for {selectedChild.name}
-            </p>
-            <p className="text-sm text-yellow-700 mt-2">
-              Child ID: {selectedChild.id}<br/>
-              Available IDs: {Object.keys(recommendationsMap).join(', ')}
-            </p>
-          </div>
-        ) : null}
+        {selectedChild && recommendationsMap[selectedChild.id]?.recommendations?.length > 0 && (
+          <RecommendationSection
+            childId={selectedChild.id}
+            childName={selectedChild.name}
+            recommendations={recommendationsMap[selectedChild.id].recommendations}
+            onStartActivity={handleStartActivity}
+          />
+        )}
 
         {/* More Prompts Teaser */}
         {filteredPrompts.length > 1 && (

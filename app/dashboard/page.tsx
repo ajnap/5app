@@ -131,7 +131,6 @@ export default async function DashboardPage() {
 
   for (const child of children) {
     try {
-      console.log(`[Dashboard] Generating recommendations for child ${child.name} (${child.id})`)
       const recommendations = await generateRecommendations(
         {
           userId: session.user.id,
@@ -141,7 +140,6 @@ export default async function DashboardPage() {
         },
         supabase
       )
-      console.log(`[Dashboard] Generated ${recommendations.recommendations.length} recommendations for ${child.name}`)
       recommendationsMap[child.id] = recommendations
     } catch (error) {
       console.error(`[Dashboard] Failed to generate recommendations for child ${child.id}:`, error)
@@ -159,14 +157,10 @@ export default async function DashboardPage() {
     }
   }
 
-  console.log(`[Dashboard] Total children: ${children.length}`)
-  console.log(`[Dashboard] Children IDs:`, children.map(c => `${c.name}: ${c.id}`))
-  console.log(`[Dashboard] Recommendations map keys:`, Object.keys(recommendationsMap))
 
   // Log each child's recommendation count
   for (const child of children) {
     const recs = recommendationsMap[child.id]
-    console.log(`[Dashboard] ${child.name} (${child.id}): ${recs?.recommendations?.length || 0} recommendations`)
   }
 
   return (

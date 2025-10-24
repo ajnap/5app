@@ -26,7 +26,6 @@ export async function generateRecommendations(
   const startTime = Date.now()
   const { userId, childId, faithMode, limit = 5 } = request
 
-  console.log(`[Recommendations] Starting for child ${childId}, faithMode: ${faithMode}`)
 
   try {
     // 1. Fetch all required data in parallel
@@ -37,7 +36,6 @@ export async function generateRecommendations(
       fetchFavorites(userId, supabase)
     ])
 
-    console.log(`[Recommendations] Fetched data - child: ${child?.name}, completions: ${completionHistory.length}, prompts: ${allPrompts.length}`)
 
     if (!child) {
       throw new Error('Child not found')
@@ -50,11 +48,9 @@ export async function generateRecommendations(
     )
 
     // 3. Handle special cases
-    console.log(`[Recommendations] Child ${child.name} has ${completionHistory.length} completions`)
 
     if (completionHistory.length < 3) {
       // New user: return starter recommendations
-      console.log(`[Recommendations] Using starter recommendations for ${child.name}`)
       const starters = getStarterRecommendations(
         child,
         allPrompts,
@@ -62,7 +58,6 @@ export async function generateRecommendations(
         limit,
         categoryDistribution
       )
-      console.log(`[Recommendations] Generated ${starters.recommendations.length} starter recommendations`)
       return starters
     }
 
@@ -92,7 +87,6 @@ export async function generateRecommendations(
 
     // Fallback: if faith filter excluded everything, use all eligible prompts
     if (faithFilteredPrompts.length === 0 && eligiblePrompts.length > 0) {
-      console.log(`[Recommendations] Faith mode filter returned 0 prompts for ${child.name}, using all eligible prompts`)
       faithFilteredPrompts = eligiblePrompts
     }
 
@@ -167,7 +161,6 @@ export async function generateRecommendations(
     const recommendations = selectDiverseRecommendations(scoredPrompts, limit)
 
     const duration = Date.now() - startTime
-    console.log(`[Recommendations] Generated in ${duration}ms for child ${childId}`)
 
     return {
       childId,
@@ -247,7 +240,6 @@ function getStarterRecommendations(
 ): RecommendationResult {
   // Filter age-appropriate prompts
   const ageAppropriate = allPrompts.filter(p => applyAgeFilter(p, child.age))
-  console.log(`[Recommendations] Starter: age-appropriate prompts for ${child.name} (age ${child.age}): ${ageAppropriate.length}`)
 
   // Filter by faith mode (but don't exclude everything if none match)
   let faithFiltered = ageAppropriate.filter(p => {
@@ -257,11 +249,9 @@ function getStarterRecommendations(
       return !p.tags?.includes('faith-based') && !p.tags?.includes('christian')
     }
   })
-  console.log(`[Recommendations] Starter: after faith filter (faithMode: ${faithMode}): ${faithFiltered.length}`)
 
   // Fallback: if faith filter resulted in no prompts, use all age-appropriate prompts
   if (faithFiltered.length === 0) {
-    console.log(`[Recommendations] Starter: Faith mode filter returned 0 prompts for ${child.name}, using all age-appropriate prompts`)
     faithFiltered = ageAppropriate
   }
 
