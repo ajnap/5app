@@ -96,14 +96,16 @@ export function addBreadcrumb(
 }
 
 /**
- * Creates a performance transaction for monitoring
+ * Creates a performance span for monitoring
  * @param name - Name of the operation
  * @param op - Operation type (e.g., 'http.request', 'db.query')
- * @returns Transaction object to be finished when operation completes
+ * @returns Span object to be finished when operation completes
  */
-export function startTransaction(name: string, op: string) {
-  return Sentry.startTransaction({
+export function startSpan(name: string, op: string) {
+  return Sentry.startSpan({
     name,
     op,
+  }, (span) => {
+    return span
   })
 }
