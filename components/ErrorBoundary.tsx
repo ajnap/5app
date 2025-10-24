@@ -43,15 +43,15 @@ export class ErrorBoundary extends Component<Props, State> {
 
       // Default error UI
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-50 to-white px-4">
-          <div className="max-w-md w-full text-center">
-            <div className="bg-white rounded-lg shadow-lg p-8">
-              <div className="text-red-600 text-6xl mb-4">⚠️</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Something went wrong
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 px-4">
+          <div className="max-w-md w-full text-center scale-in">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 border-2 border-red-100">
+              <div className="text-6xl mb-4 animate-bounce-gentle">😕</div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">
+                Oops! Something went wrong
               </h2>
-              <p className="text-gray-600 mb-6">
-                We apologize for the inconvenience. An error occurred while loading this page.
+              <p className="text-gray-600 mb-6 text-lg">
+                Don't worry - your data is safe. Let's get you back on track!
               </p>
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <div className="text-left bg-gray-100 rounded p-4 mb-4 overflow-auto">
@@ -60,18 +60,18 @@ export class ErrorBoundary extends Component<Props, State> {
                   </p>
                 </div>
               )}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <button
                   onClick={() => this.setState({ hasError: false, error: undefined })}
-                  className="w-full bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition font-semibold"
+                  className="btn-primary w-full"
                 >
-                  Try again
+                  Try Again
                 </button>
                 <button
-                  onClick={() => (window.location.href = '/')}
-                  className="w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition font-semibold"
+                  onClick={() => (window.location.href = '/dashboard')}
+                  className="w-full bg-gray-100 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-200 transition-all font-semibold"
                 >
-                  Go to homepage
+                  Go to Dashboard
                 </button>
               </div>
             </div>

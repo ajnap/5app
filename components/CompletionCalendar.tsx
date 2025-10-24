@@ -120,9 +120,11 @@ export default function CompletionCalendar({ completions }: CompletionCalendarPr
           return (
             <div
               key={day}
-              className={`aspect-square rounded-lg flex items-center justify-center text-sm font-medium transition-all ${intensityClass} ${
-                isTodayDate ? 'ring-2 ring-primary-500 ring-offset-2' : ''
-              } ${completionCount > 0 ? 'text-white' : 'text-gray-700'}`}
+              className={`aspect-square rounded-lg flex items-center justify-center text-sm font-medium transition-all duration-200 cursor-default ${intensityClass} ${
+                isTodayDate ? 'ring-2 ring-primary-500 ring-offset-2 scale-in' : ''
+              } ${completionCount > 0 ? 'text-white hover:scale-110 hover:shadow-lg' : 'text-gray-700 hover:bg-gray-200'} ${
+                completionCount > 0 ? 'animate-bounce-gentle' : ''
+              }`}
               title={completionCount > 0 ? `${completionCount} ${completionCount === 1 ? 'activity' : 'activities'} completed` : 'No activities'}
             >
               {day}
