@@ -1,5 +1,11 @@
 # The Next 5 Minutes - Parenting Connection App
 
+[![CI](https://github.com/ajnap/5app/actions/workflows/ci.yml/badge.svg)](https://github.com/ajnap/5app/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/ajnap/5app/actions/workflows/codeql.yml/badge.svg)](https://github.com/ajnap/5app/actions/workflows/codeql.yml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue)](https://www.typescriptlang.org/)
+[![Tests](https://img.shields.io/badge/tests-96%20passing-brightgreen)](#testing-strategy)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 > **Live App**: [https://5app-d22y33qyj-alex-napierskis-projects.vercel.app](https://5app-d22y33qyj-alex-napierskis-projects.vercel.app)
 
 A full-stack parenting connection app that delivers personalized daily 5-minute activities to strengthen parent-child relationships. Built with modern web technologies and backed by research-based prompts tailored to your child's age and development.
