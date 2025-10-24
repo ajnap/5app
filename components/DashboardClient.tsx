@@ -62,6 +62,17 @@ export default function DashboardClient({
   const [selectedChildId, setSelectedChildId] = useState<string | null>(
     children.length === 1 ? children[0].id : null
   )
+
+  // Debug logging
+  useEffect(() => {
+    console.log('[DashboardClient] Children:', children.map(c => ({ name: c.name, id: c.id })))
+    console.log('[DashboardClient] Recommendations map keys:', Object.keys(recommendationsMap))
+    console.log('[DashboardClient] Recommendations map:', Object.entries(recommendationsMap).map(([id, rec]) => ({
+      mapKey: id,
+      childIdInResult: rec.childId,
+      count: rec.recommendations.length
+    })))
+  }, [children, recommendationsMap])
   const [completedToday, setCompletedToday] = useState(initialCompletedToday)
   const [reflectionOpen, setReflectionOpen] = useState(false)
   const [completingPromptId, setCompletingPromptId] = useState<string | null>(null)
