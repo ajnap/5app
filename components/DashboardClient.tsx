@@ -221,14 +221,26 @@ export default function DashboardClient({
         />
 
         {/* Smart Recommendations - show for selected child */}
-        {selectedChild && recommendationsMap[selectedChild.id] && recommendationsMap[selectedChild.id].recommendations.length > 0 && (
-          <RecommendationSection
-            childId={selectedChild.id}
-            childName={selectedChild.name}
-            recommendations={recommendationsMap[selectedChild.id].recommendations}
-            onStartActivity={handleStartActivity}
-          />
-        )}
+        {selectedChild && recommendationsMap[selectedChild.id]?.recommendations?.length > 0 ? (
+          <>
+            <RecommendationSection
+              childId={selectedChild.id}
+              childName={selectedChild.name}
+              recommendations={recommendationsMap[selectedChild.id].recommendations}
+              onStartActivity={handleStartActivity}
+            />
+          </>
+        ) : selectedChild && Object.keys(recommendationsMap).length > 0 ? (
+          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-6 mb-8">
+            <p className="text-yellow-900 font-semibold">
+              🔧 Debug: No recommendations for {selectedChild.name}
+            </p>
+            <p className="text-sm text-yellow-700 mt-2">
+              Child ID: {selectedChild.id}<br/>
+              Available IDs: {Object.keys(recommendationsMap).join(', ')}
+            </p>
+          </div>
+        ) : null}
 
         {/* More Prompts Teaser */}
         {filteredPrompts.length > 1 && (
