@@ -14,6 +14,8 @@ import type {
 } from './types'
 import { analyzeCategoryDistribution } from './category-analyzer'
 import { calculatePromptScore, applyAgeFilter, applyRecencyFilter, calculateRecencyMultiplier } from './score-calculator'
+import { captureError, captureMessage, addBreadcrumb } from '@/lib/sentry'
+import * as Sentry from '@sentry/nextjs'
 
 /**
  * Generates personalized recommendations for a child
@@ -26,40 +28,112 @@ export async function generateRecommendations(
   const startTime = Date.now()
   const { userId, childId, faithMode, limit = 5 } = request
 
+  // Add breadcrumb for tracking
+  addBreadcrumb('Generating recommendations', 'recommendation', {
+    userId,
+    childId,
+    faithMode,
+    limit
+  })
 
-  try {
-    // 1. Fetch all required data in parallel
-    const [child, completionHistory, allPrompts, favorites] = await Promise.all([
-      fetchChild(childId, supabase),
-      fetchCompletionHistory(childId, supabase),
-      fetchAllPrompts(supabase),
-      fetchFavorites(userId, supabase)
-    ])
+  // Log start in development mode
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Recommendations] Starting generation', { userId, childId, faithMode, limit })
+  }
 
-
-    if (!child) {
-      throw new Error('Child not found')
-    }
-
-    // 2. Analyze category distribution
-    const categoryDistribution = await analyzeCategoryDistribution(
+  // Start performance span
+  return await Sentry.startSpan({
+    name: 'generateRecommendations',
+    op: 'function.recommendation',
+    attributes: {
+      userId,
       childId,
-      completionHistory
-    )
-
-    // 3. Handle special cases
-
-    if (completionHistory.length < 3) {
-      // New user: return starter recommendations
-      const starters = getStarterRecommendations(
-        child,
-        allPrompts,
-        faithMode,
-        limit,
-        categoryDistribution
-      )
-      return starters
+      faithMode: String(faithMode),
+      limit
     }
+  }, async () => {
+    try {
+      // 1. Fetch all required data in parallel
+      const dataFetchStart = Date.now()
+      const [child, completionHistory, allPrompts, favorites] = await Promise.all([
+        fetchChild(childId, supabase),
+        fetchCompletionHistory(childId, supabase),
+        fetchAllPrompts(supabase),
+        fetchFavorites(userId, supabase)
+      ])
+      const dataFetchDuration = Date.now() - dataFetchStart
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Recommendations] Data fetched', {
+          dataFetchDuration: `${dataFetchDuration}ms`,
+          completionsCount: completionHistory.length,
+          promptsCount: allPrompts.length,
+          favoritesCount: favorites.length
+        })
+      }
+
+
+      if (!child) {
+        const error = new Error('Child not found')
+        captureError(error, {
+          tags: { component: 'recommendations', operation: 'generate' },
+          extra: { childId, userId }
+        })
+        throw error
+      }
+
+      // 2. Analyze category distribution
+      const categoryDistribution = await analyzeCategoryDistribution(
+        childId,
+        completionHistory
+      )
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Recommendations] Category distribution analyzed', {
+          stats: categoryDistribution.stats.map(s => ({
+            category: s.category,
+            percentage: `${(s.percentage * 100).toFixed(1)}%`
+          })),
+          underrepresented: categoryDistribution.underrepresented,
+          overrepresented: categoryDistribution.overrepresented
+        })
+      }
+
+      // 3. Handle special cases
+
+      if (completionHistory.length < 3) {
+        // New user: return starter recommendations
+        addBreadcrumb('Returning starter recommendations', 'recommendation', {
+          completionCount: completionHistory.length
+        })
+
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Recommendations] New user - returning starters', {
+            completionCount: completionHistory.length
+          })
+        }
+
+        const starters = getStarterRecommendations(
+          child,
+          allPrompts,
+          faithMode,
+          limit,
+          categoryDistribution
+        )
+
+        const duration = Date.now() - startTime
+        logRecommendationMetrics({
+          generationTime: duration,
+          recommendationCount: starters.recommendations.length,
+          totalCompletions: completionHistory.length,
+          cacheHit: false,
+          strategy: 'starter',
+          userId,
+          childId
+        })
+
+        return starters
+      }
 
     // 4. Filter eligible prompts
     const eligiblePrompts = allPrompts.filter(prompt => {
@@ -92,17 +166,45 @@ export async function generateRecommendations(
 
     const finalEligiblePrompts = faithFilteredPrompts
 
-    // Check if we exhausted all prompts
-    if (finalEligiblePrompts.length === 0) {
-      return getGreatestHitsRecommendations(
-        child,
-        completionHistory,
-        favorites,
-        allPrompts,
-        limit,
-        categoryDistribution
-      )
-    }
+      // Check if we exhausted all prompts
+      if (finalEligiblePrompts.length === 0) {
+        addBreadcrumb('All prompts exhausted - returning greatest hits', 'recommendation', {
+          totalPrompts: allPrompts.length
+        })
+
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Recommendations] All prompts exhausted - returning greatest hits')
+        }
+
+        const greatestHits = getGreatestHitsRecommendations(
+          child,
+          completionHistory,
+          favorites,
+          allPrompts,
+          limit,
+          categoryDistribution
+        )
+
+        const duration = Date.now() - startTime
+        logRecommendationMetrics({
+          generationTime: duration,
+          recommendationCount: greatestHits.recommendations.length,
+          totalCompletions: completionHistory.length,
+          cacheHit: false,
+          strategy: 'greatest_hits',
+          userId,
+          childId
+        })
+
+        return greatestHits
+      }
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Recommendations] Eligible prompts filtered', {
+          eligibleCount: finalEligiblePrompts.length,
+          totalPrompts: allPrompts.length
+        })
+      }
 
     // 5. Score all eligible prompts
     const scoredPrompts = await Promise.all(
@@ -130,56 +232,127 @@ export async function generateRecommendations(
     // 6. Sort by score (descending)
     scoredPrompts.sort((a, b) => b.score - a.score)
 
-    // 7. Check for single category domination (> 50% completions)
-    const dominantCategory = categoryDistribution.stats[0]
-    if (dominantCategory && dominantCategory.percentage > 0.5) {
-      // Force diversity: filter out dominant category
-      const diversePrompts = scoredPrompts.filter(
-        sp => sp.prompt.category !== dominantCategory.category
-      )
+      // 7. Check for single category domination (> 50% completions)
+      const dominantCategory = categoryDistribution.stats[0]
+      if (dominantCategory && dominantCategory.percentage > 0.5) {
+        // Force diversity: filter out dominant category
+        addBreadcrumb('Forcing diversity - dominant category detected', 'recommendation', {
+          dominantCategory: dominantCategory.category,
+          percentage: `${(dominantCategory.percentage * 100).toFixed(1)}%`
+        })
 
-      if (diversePrompts.length >= 3) {
-        const selected = selectDiverseRecommendations(diversePrompts, limit)
-        const duration = Date.now() - startTime
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Recommendations] Forcing diversity', {
+            dominantCategory: dominantCategory.category,
+            percentage: `${(dominantCategory.percentage * 100).toFixed(1)}%`
+          })
+        }
 
-        return {
-          childId,
-          recommendations: selected,
-          metadata: {
+        const diversePrompts = scoredPrompts.filter(
+          sp => sp.prompt.category !== dominantCategory.category
+        )
+
+        if (diversePrompts.length >= 3) {
+          const selected = selectDiverseRecommendations(diversePrompts, limit)
+          const duration = Date.now() - startTime
+
+          logRecommendationMetrics({
+            generationTime: duration,
+            recommendationCount: selected.length,
             totalCompletions: completionHistory.length,
-            categoryDistribution: Object.fromEntries(
-              categoryDistribution.stats.map(s => [s.category, s.count])
-            ),
-            timestamp: new Date().toISOString(),
-            cacheKey: `recommendations:${userId}:${childId}:${faithMode}:v1`
+            cacheHit: false,
+            strategy: 'forced_diversity',
+            userId,
+            childId
+          })
+
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[Recommendations] Complete - forced diversity', {
+              duration: `${duration}ms`,
+              recommendationCount: selected.length,
+              categories: selected.map(r => r.prompt.category)
+            })
+          }
+
+          return {
+            childId,
+            recommendations: selected,
+            metadata: {
+              totalCompletions: completionHistory.length,
+              categoryDistribution: Object.fromEntries(
+                categoryDistribution.stats.map(s => [s.category, s.count])
+              ),
+              timestamp: new Date().toISOString(),
+              cacheKey: `recommendations:${userId}:${childId}:${faithMode}:v1`
+            }
           }
         }
       }
-    }
 
-    // 8. Select diverse recommendations
-    const recommendations = selectDiverseRecommendations(scoredPrompts, limit)
+      // 8. Select diverse recommendations
+      const recommendations = selectDiverseRecommendations(scoredPrompts, limit)
 
-    const duration = Date.now() - startTime
+      const duration = Date.now() - startTime
 
-    return {
-      childId,
-      recommendations,
-      metadata: {
+      logRecommendationMetrics({
+        generationTime: duration,
+        recommendationCount: recommendations.length,
         totalCompletions: completionHistory.length,
-        categoryDistribution: Object.fromEntries(
-          categoryDistribution.stats.map(s => [s.category, s.count])
-        ),
-        timestamp: new Date().toISOString(),
-        cacheKey: `recommendations:${userId}:${childId}:${faithMode}:v1`
-      }
-    }
-  } catch (error) {
-    console.error('[Recommendations] Error generating recommendations:', error)
+        cacheHit: false,
+        strategy: 'standard',
+        userId,
+        childId
+      })
 
-    // Fallback: return age-appropriate prompts
-    return getFallbackRecommendations(childId, request, supabase)
-  }
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Recommendations] Complete - standard', {
+          duration: `${duration}ms`,
+          recommendationCount: recommendations.length,
+          categories: recommendations.map(r => r.prompt.category),
+          topScores: recommendations.slice(0, 3).map(r => ({
+            title: r.prompt.title,
+            score: r.score.toFixed(2),
+            reasons: r.reasons.map(reason => reason.type)
+          }))
+        })
+      }
+
+      return {
+        childId,
+        recommendations,
+        metadata: {
+          totalCompletions: completionHistory.length,
+          categoryDistribution: Object.fromEntries(
+            categoryDistribution.stats.map(s => [s.category, s.count])
+          ),
+          timestamp: new Date().toISOString(),
+          cacheKey: `recommendations:${userId}:${childId}:${faithMode}:v1`
+        }
+      }
+    } catch (error) {
+      const duration = Date.now() - startTime
+
+      captureError(error, {
+        tags: {
+          component: 'recommendations',
+          operation: 'generate',
+          userId,
+          childId
+        },
+        extra: {
+          request,
+          duration
+        }
+      })
+
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Recommendations] Error generating recommendations:', error)
+      }
+
+      // Fallback: return age-appropriate prompts
+      return getFallbackRecommendations(childId, request, supabase)
+    }
+  })
 }
 
 /**
@@ -381,6 +554,17 @@ async function getFallbackRecommendations(
   request: RecommendationRequest,
   supabase: SupabaseClient
 ): Promise<RecommendationResult> {
+  const startTime = Date.now()
+
+  addBreadcrumb('Using fallback recommendations', 'recommendation', {
+    childId,
+    reason: 'engine_error'
+  })
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Recommendations] Using fallback recommendations')
+  }
+
   const { data: child } = await supabase
     .from('child_profiles')
     .select('*')
@@ -408,6 +592,18 @@ async function getFallbackRecommendations(
       weight: 1.0
     }]
   }))
+
+  const duration = Date.now() - startTime
+
+  logRecommendationMetrics({
+    generationTime: duration,
+    recommendationCount: recommendations.length,
+    totalCompletions: 0,
+    cacheHit: false,
+    strategy: 'fallback',
+    userId: request.userId,
+    childId
+  })
 
   return {
     childId,
@@ -490,4 +686,82 @@ function getAgeCategory(age: number): string {
   if (age < 12) return 'elementary'
   if (age < 18) return 'teen'
   return 'young_adult'
+}
+
+/**
+ * Logs recommendation metrics for monitoring and analytics
+ */
+interface RecommendationMetrics {
+  generationTime: number
+  recommendationCount: number
+  totalCompletions: number
+  cacheHit: boolean
+  strategy: 'starter' | 'standard' | 'forced_diversity' | 'greatest_hits' | 'fallback'
+  userId: string
+  childId: string
+}
+
+function logRecommendationMetrics(metrics: RecommendationMetrics) {
+  const {
+    generationTime,
+    recommendationCount,
+    totalCompletions,
+    cacheHit,
+    strategy,
+    userId,
+    childId
+  } = metrics
+
+  // Add breadcrumb for tracking
+  addBreadcrumb('Recommendations generated', 'recommendation', {
+    generationTime: `${generationTime}ms`,
+    recommendationCount,
+    strategy,
+    cacheHit
+  })
+
+  // Log performance metrics with Sentry
+  captureMessage(`Recommendations generated: ${strategy}`, 'info', {
+    tags: {
+      component: 'recommendations',
+      strategy,
+      cacheHit: String(cacheHit)
+    },
+    extra: {
+      generationTime,
+      recommendationCount,
+      totalCompletions,
+      userId,
+      childId,
+      performanceCategory: generationTime < 500 ? 'fast' : 'slow'
+    }
+  })
+
+  // Warn if generation time exceeds target
+  if (generationTime > 500) {
+    captureMessage(`Slow recommendation generation: ${generationTime}ms`, 'warning', {
+      tags: {
+        component: 'recommendations',
+        performance: 'slow'
+      },
+      extra: {
+        generationTime,
+        userId,
+        childId,
+        strategy
+      }
+    })
+  }
+
+  // Development mode: detailed console logging
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Recommendations] Metrics', {
+      generationTime: `${generationTime}ms`,
+      recommendationCount,
+      totalCompletions,
+      cacheHit,
+      strategy,
+      performanceCategory: generationTime < 500 ? '✅ fast' : '⚠️ slow'
+    })
+  }
 }

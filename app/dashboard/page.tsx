@@ -96,6 +96,18 @@ export default async function DashboardPage() {
 
   const totalCompletions = totalData || 0
 
+  // Get time statistics
+  const { data: timeStatsWeek } = await supabase
+    .rpc('get_time_stats', { p_user_id: session.user.id, p_period: 'week' })
+    .single()
+
+  const { data: timeStatsMonth } = await supabase
+    .rpc('get_time_stats', { p_user_id: session.user.id, p_period: 'month' })
+    .single()
+
+  const weeklyMinutes = (timeStatsWeek as any)?.total_minutes || 0
+  const monthlyMinutes = (timeStatsMonth as any)?.total_minutes || 0
+
   // Get completion history for calendar
   const { data: completionHistoryData } = await supabase
     .from('prompt_completions')
@@ -231,7 +243,7 @@ export default async function DashboardPage() {
 
           {/* Progress Stats */}
           {(currentStreak > 0 || totalCompletions > 0) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 fade-in">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 fade-in">
               {/* Streak Card */}
               <div className="card bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 border-2 border-orange-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center gap-4">
@@ -266,6 +278,22 @@ export default async function DashboardPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Time Stats Card */}
+              {(weeklyMinutes > 0 || monthlyMinutes > 0) && (
+                <div className="card bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+                  <div className="flex items-center gap-4">
+                    <div className="text-5xl">⏱️</div>
+                    <div>
+                      <p className="text-3xl font-bold text-blue-900">{weeklyMinutes}</p>
+                      <p className="text-blue-700 font-medium">Minutes This Week</p>
+                      {monthlyMinutes > 0 && (
+                        <p className="text-sm text-blue-600 mt-1">{monthlyMinutes} min this month</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

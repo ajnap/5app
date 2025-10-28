@@ -9,10 +9,66 @@ interface CompletionDate {
 
 interface CompletionCalendarProps {
   completions: CompletionDate[]
+  isLoading?: boolean
 }
 
-export default function CompletionCalendar({ completions }: CompletionCalendarProps) {
+// Skeleton loading state component
+function CalendarSkeleton() {
+  return (
+    <div className="card">
+      {/* Header skeleton */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse"></div>
+        <div className="flex gap-2">
+          <div className="h-9 w-9 bg-gray-200 rounded-lg animate-pulse"></div>
+          <div className="h-9 w-9 bg-gray-200 rounded-lg animate-pulse"></div>
+        </div>
+      </div>
+
+      {/* Day names skeleton */}
+      <div className="grid grid-cols-7 gap-2 mb-2">
+        {Array.from({ length: 7 }).map((_, i) => (
+          <div key={i} className="h-6 bg-gray-200 rounded animate-pulse" style={{ animationDelay: `${i * 50}ms` }}></div>
+        ))}
+      </div>
+
+      {/* Calendar grid skeleton */}
+      <div className="grid grid-cols-7 gap-2">
+        {Array.from({ length: 35 }).map((_, i) => (
+          <div
+            key={i}
+            className="aspect-square bg-gray-200 rounded-lg animate-pulse"
+            style={{ animationDelay: `${i * 20}ms` }}
+          ></div>
+        ))}
+      </div>
+
+      {/* Legend skeleton */}
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="flex items-center justify-between">
+          <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-12 bg-gray-200 rounded animate-pulse"></div>
+            <div className="flex gap-1">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+              ))}
+            </div>
+            <div className="h-4 w-12 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function CompletionCalendar({ completions, isLoading = false }: CompletionCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
+
+  // Show skeleton while loading
+  if (isLoading) {
+    return <CalendarSkeleton />
+  }
 
   // Create a map of dates to completion counts
   const completionMap = new Map<string, number>()
