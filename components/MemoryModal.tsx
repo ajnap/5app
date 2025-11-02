@@ -271,7 +271,7 @@ export default function MemoryModal({ isOpen, onClose, children, userId }: Memor
 
           {/* Child Selector */}
           <div className="mb-4">
-            <label htmlFor="child-select" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="child-select" className="block text-sm font-medium text-gray-900 mb-2">
               Child
             </label>
             <select
@@ -281,12 +281,12 @@ export default function MemoryModal({ isOpen, onClose, children, userId }: Memor
                 setSelectedChildId(e.target.value)
                 if (error) setError(null)
               }}
-              className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-primary-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-primary-500 focus:outline-none transition-colors text-gray-900 font-medium bg-white"
               disabled={isSubmitting}
             >
-              <option value="">Select a child...</option>
+              <option value="" className="text-gray-500">Select a child...</option>
               {children.map((child) => (
-                <option key={child.id} value={child.id}>
+                <option key={child.id} value={child.id} className="text-gray-900">
                   {child.name}
                 </option>
               ))}
@@ -295,7 +295,7 @@ export default function MemoryModal({ isOpen, onClose, children, userId }: Memor
 
           {/* Memory Text Area */}
           <div className="mb-4">
-            <label htmlFor="memory-content" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="memory-content" className="block text-sm font-medium text-gray-900 mb-2">
               Memory
             </label>
             <textarea
@@ -307,17 +307,17 @@ export default function MemoryModal({ isOpen, onClose, children, userId }: Memor
               }}
               placeholder="She said the funniest thing at dinner..."
               rows={5}
-              className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-primary-500 focus:outline-none transition-colors resize-none"
+              className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-primary-500 focus:outline-none transition-colors resize-none text-gray-900 placeholder-gray-500 bg-white"
               disabled={isSubmitting}
             />
-            <p className={`text-xs font-medium text-right mt-1 ${charsRemaining < 50 ? 'text-orange-600' : 'text-gray-500'}`}>
+            <p className={`text-xs font-medium text-right mt-1 ${charsRemaining < 50 ? 'text-orange-600' : 'text-gray-600'}`}>
               {charsRemaining} characters left
             </p>
           </div>
 
           {/* Photo Upload */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Add a photo (optional)
             </label>
 
@@ -374,7 +374,7 @@ export default function MemoryModal({ isOpen, onClose, children, userId }: Memor
 
           {/* Tags */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Tags (optional, max 5)
             </label>
 
@@ -407,7 +407,7 @@ export default function MemoryModal({ isOpen, onClose, children, userId }: Memor
                 onKeyDown={handleTagInputKeyDown}
                 placeholder="Type a tag and press Enter..."
                 disabled={isSubmitting}
-                className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 focus:border-primary-500 focus:outline-none transition-colors text-sm"
+                className="w-full px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-primary-500 focus:outline-none transition-colors text-sm text-gray-900 placeholder-gray-500 bg-white"
               />
             )}
 
@@ -437,7 +437,7 @@ export default function MemoryModal({ isOpen, onClose, children, userId }: Memor
                 disabled={isSubmitting}
                 className="w-5 h-5 rounded border-gray-300 text-amber-500 focus:ring-amber-500 cursor-pointer"
               />
-              <span className="text-sm font-medium text-gray-700 group-hover:text-amber-600 transition-colors">
+              <span className="text-sm font-medium text-gray-900 group-hover:text-amber-600 transition-colors">
                 ⭐ Mark as milestone moment
               </span>
             </label>
