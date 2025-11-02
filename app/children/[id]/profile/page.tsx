@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '@/components/SignOutButton'
 import ChildGrowthStats from '@/components/ChildGrowthStats'
+import MemoryTimeline from '@/components/MemoryTimeline'
 import { ROUTES } from '@/lib/constants'
 
 // Helper function to calculate age
@@ -142,41 +143,13 @@ export default async function ChildProfilePage({ params }: { params: { id: strin
             <ChildGrowthStats childId={params.id} />
           </div>
 
-          {/* Memory Journal */}
-          <div className="card mb-8 fade-in">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Memory Journal 📝</h2>
-              <span className="text-sm text-gray-600">{journalEntries?.length || 0} memories</span>
-            </div>
-
-            {journalEntries && journalEntries.length > 0 ? (
-              <div className="space-y-4">
-                {journalEntries.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-lg p-4 border-2 border-pink-200"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="text-sm font-medium text-gray-600">{formatDate(entry.entry_date)}</p>
-                      {entry.emoji_reactions && entry.emoji_reactions.length > 0 && (
-                        <div className="flex gap-1">
-                          {entry.emoji_reactions.map((emoji: string, idx: number) => (
-                            <span key={idx} className="text-lg">{emoji}</span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-gray-800">{entry.content}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                <div className="text-5xl mb-4">💭</div>
-                <p className="text-lg">No memories captured yet</p>
-                <p className="text-sm mt-2">Use the pink button on the dashboard to add your first memory!</p>
-              </div>
-            )}
+          {/* Enhanced Memory Timeline */}
+          <div className="mb-8 fade-in">
+            <MemoryTimeline
+              childId={params.id}
+              childName={child.name}
+              initialMemories={journalEntries || []}
+            />
           </div>
 
           {/* Recent Activities */}

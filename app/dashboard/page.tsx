@@ -2,6 +2,7 @@ import { createServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '@/components/SignOutButton'
+import ThemeToggle from '@/components/ThemeToggle'
 import DashboardClient from '@/components/DashboardClient'
 import CompletionCalendar from '@/components/CompletionCalendar'
 import AdminResetButton from '@/components/AdminResetButton'
@@ -175,32 +176,33 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Navigation */}
       <nav className="container mx-auto px-6 py-6 fade-in">
-        <div className="flex justify-between items-center backdrop-blur-md bg-white/40 rounded-2xl px-6 py-3 shadow-lg border border-white/50">
+        <div className="flex justify-between items-center backdrop-blur-md bg-white/40 dark:bg-gray-900/40 rounded-2xl px-6 py-3 shadow-lg border border-white/50 dark:border-gray-700/50">
           <h1 className="text-2xl font-bold gradient-text">The Next 5 Minutes</h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-700 font-medium hidden md:block">{session.user.email}</span>
+            <span className="text-sm text-gray-700 dark:text-gray-300 font-medium hidden md:block">{session.user.email}</span>
             <Link
               href="/favorites"
-              className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-200 hover:scale-110"
+              className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-200 hover:scale-110"
               title="My Favorites"
             >
               ❤️
             </Link>
             <Link
               href="/children"
-              className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-200 px-3 py-1.5 rounded-lg hover:bg-white/60"
+              className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-200 px-3 py-1.5 rounded-lg hover:bg-white/60 dark:hover:bg-gray-800/60"
             >
               Children
             </Link>
             <Link
               href={ROUTES.ACCOUNT}
-              className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-200 px-3 py-1.5 rounded-lg hover:bg-white/60"
+              className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-200 px-3 py-1.5 rounded-lg hover:bg-white/60 dark:hover:bg-gray-800/60"
             >
               Account
             </Link>
+            <ThemeToggle />
             <SignOutButton />
           </div>
         </div>
