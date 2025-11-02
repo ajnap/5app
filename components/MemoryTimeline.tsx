@@ -298,7 +298,7 @@ export default function MemoryTimeline({ childId, childName, userId }: MemoryTim
                 >
                   {/* Date and milestone badge */}
                   <div className="flex items-center justify-between mb-3">
-                    <div className="text-sm text-gray-600 font-medium">
+                    <div className="text-sm text-gray-900 font-semibold">
                       {formatDate(memory.entry_date)}
                     </div>
                     {memory.is_milestone && (
@@ -321,9 +321,9 @@ export default function MemoryTimeline({ childId, childName, userId }: MemoryTim
                   )}
 
                   {/* Content */}
-                  <p className="text-gray-800 leading-relaxed mb-3">{memory.content}</p>
+                  <p className="text-gray-900 text-base leading-relaxed mb-3">{memory.content}</p>
 
-                  {/* Tags and emojis */}
+                  {/* Tags */}
                   <div className="flex flex-wrap items-center gap-2">
                     {memory.tags?.map(tag => (
                       <span
@@ -333,13 +333,6 @@ export default function MemoryTimeline({ childId, childName, userId }: MemoryTim
                         #{tag}
                       </span>
                     ))}
-                    {memory.emoji_reactions && memory.emoji_reactions.length > 0 && (
-                      <div className="flex gap-1 ml-auto">
-                        {memory.emoji_reactions.map((emoji, i) => (
-                          <span key={i} className="text-xl">{emoji}</span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}

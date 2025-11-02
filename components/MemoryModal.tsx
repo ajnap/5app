@@ -18,8 +18,6 @@ interface MemoryModalProps {
   userId: string
 }
 
-const EMOJI_OPTIONS = ['❤️', '😊', '🎉', '🤗', '✨']
-
 const SUGGESTED_TAGS = [
   'first-time', 'milestone', 'funny', 'sweet', 'achievement',
   'creative', 'silly', 'proud', 'learning', 'adventure'
@@ -28,7 +26,6 @@ const SUGGESTED_TAGS = [
 export default function MemoryModal({ isOpen, onClose, children, userId }: MemoryModalProps) {
   const [selectedChildId, setSelectedChildId] = useState('')
   const [content, setContent] = useState('')
-  const [selectedEmojis, setSelectedEmojis] = useState<string[]>([])
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
   const [isMilestone, setIsMilestone] = useState(false)
@@ -52,7 +49,6 @@ export default function MemoryModal({ isOpen, onClose, children, userId }: Memor
     if (isOpen) {
       setSelectedChildId(children.length === 1 ? children[0].id : '')
       setContent('')
-      setSelectedEmojis([])
       setTags([])
       setTagInput('')
       setIsMilestone(false)
@@ -83,12 +79,6 @@ export default function MemoryModal({ isOpen, onClose, children, userId }: Memor
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
   }, [isOpen, isSubmitting, onClose])
-
-  const toggleEmoji = (emoji: string) => {
-    setSelectedEmojis((prev) =>
-      prev.includes(emoji) ? prev.filter((e) => e !== emoji) : [...prev, emoji]
-    )
-  }
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -227,7 +217,6 @@ export default function MemoryModal({ isOpen, onClose, children, userId }: Memor
           user_id: userId,
           child_id: selectedChildId,
           content: content.trim(),
-          emoji_reactions: selectedEmojis,
           tags: tags.length > 0 ? tags : null,
           is_milestone: isMilestone,
           photo_url: photoData?.url || null,
@@ -267,7 +256,7 @@ export default function MemoryModal({ isOpen, onClose, children, userId }: Memor
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div
-          className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 pointer-events-auto slide-in"
+          className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-8 pointer-events-auto slide-in"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -433,30 +422,6 @@ export default function MemoryModal({ isOpen, onClose, children, userId }: Memor
                   type="button"
                 >
                   {tag}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Emoji Reactions */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Add a feeling (optional)
-            </label>
-            <div className="flex gap-3">
-              {EMOJI_OPTIONS.map((emoji) => (
-                <button
-                  key={emoji}
-                  onClick={() => toggleEmoji(emoji)}
-                  className={`text-3xl p-3 rounded-lg border-2 transition-all ${
-                    selectedEmojis.includes(emoji)
-                      ? 'border-primary-500 bg-primary-50 scale-110'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  disabled={isSubmitting}
-                  type="button"
-                >
-                  {emoji}
                 </button>
               ))}
             </div>
