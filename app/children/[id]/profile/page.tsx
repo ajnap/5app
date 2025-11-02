@@ -30,7 +30,8 @@ function formatDate(dateString: string): string {
   })
 }
 
-export default async function ChildProfilePage({ params }: { params: { id: string } }) {
+export default async function ChildProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createServerClient()
 
   // Check if user is authenticated
@@ -44,7 +45,7 @@ export default async function ChildProfilePage({ params }: { params: { id: strin
   const { data: child, error } = await supabase
     .from('child_profiles')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('user_id', session.user.id)
     .single()
 
@@ -64,13 +65,13 @@ export default async function ChildProfilePage({ params }: { params: { id: strin
         category
       )
     `)
-    .eq('child_id', params.id)
+    .eq('child_id', id)
     .order('completed_at', { ascending: false })
     .limit(10)
 
   // Get child streak
   const { data: childStreak } = await supabase
-    .rpc('get_child_streak', { p_child_id: params.id })
+    .rpc('get_child_streak', { p_child_id: id })
 
   const streak = childStreak || 0
   const totalActivities = completions?.length || 0
@@ -132,13 +133,13 @@ export default async function ChildProfilePage({ params }: { params: { id: strin
 
           {/* Growth Stats */}
           <div className="mb-8 fade-in">
-            <ChildGrowthStats childId={params.id} />
+            <ChildGrowthStats childId={id} />
           </div>
 
           {/* Memory Timeline */}
           <div className="card mb-8 fade-in">
             <MemoryTimeline
-              childId={params.id}
+              childId={id}
               childName={child.name}
               userId={session.user.id}
             />

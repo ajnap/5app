@@ -5,7 +5,8 @@ import SignOutButton from '@/components/SignOutButton'
 import ChildForm from '@/components/ChildForm'
 import { ROUTES } from '@/lib/constants'
 
-export default async function EditChildPage({ params }: { params: { id: string } }) {
+export default async function EditChildPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createServerClient()
 
   // Check if user is authenticated
@@ -19,7 +20,7 @@ export default async function EditChildPage({ params }: { params: { id: string }
   const { data: child, error } = await supabase
     .from('child_profiles')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('user_id', session.user.id) // Ensure user owns this child
     .single()
 
