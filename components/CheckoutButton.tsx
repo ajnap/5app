@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
+import { toast } from 'sonner'
 
 // Initialize Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
@@ -30,7 +31,9 @@ export default function CheckoutButton({ tier }: CheckoutButtonProps) {
 
       if (error) {
         console.error('Checkout error:', error)
-        alert('Failed to start checkout. Please try again.')
+        toast.error('Failed to start checkout', {
+          description: 'Please try again or contact support if the issue persists.'
+        })
         return
       }
 
@@ -40,7 +43,9 @@ export default function CheckoutButton({ tier }: CheckoutButtonProps) {
       }
     } catch (error) {
       console.error('Checkout error:', error)
-      alert('Failed to start checkout. Please try again.')
+      toast.error('Failed to start checkout', {
+        description: 'Please try again or contact support if the issue persists.'
+      })
     } finally {
       setLoading(false)
     }

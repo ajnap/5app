@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 export default function ManageSubscriptionButton() {
   const [loading, setLoading] = useState(false)
@@ -18,7 +19,9 @@ export default function ManageSubscriptionButton() {
 
       if (error) {
         console.error('Portal error:', error)
-        alert('Failed to open billing portal. Please try again.')
+        toast.error('Failed to open billing portal', {
+          description: 'Please try again or contact support'
+        })
         return
       }
 
@@ -28,7 +31,9 @@ export default function ManageSubscriptionButton() {
       }
     } catch (error) {
       console.error('Portal error:', error)
-      alert('Failed to open billing portal. Please try again.')
+      toast.error('Failed to open billing portal', {
+        description: 'Please try again or contact support'
+      })
     } finally {
       setLoading(false)
     }

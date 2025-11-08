@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { createBrowserClient } from '@supabase/ssr'
 
 interface OnboardingFlowProps {
@@ -87,7 +88,9 @@ export default function OnboardingFlow({ userId, userEmail }: OnboardingFlowProp
       router.refresh()
     } catch (error: any) {
       console.error('Onboarding error:', error)
-      alert(`Failed to complete onboarding: ${error.message}. Please try again.`)
+      toast.error('Failed to complete onboarding', {
+        description: error.message || 'Please try again'
+      })
       setIsSubmitting(false)
     }
   }

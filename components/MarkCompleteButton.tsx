@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { markPromptComplete, unmarkPromptComplete } from '@/app/actions/completions'
 
 interface MarkCompleteButtonProps {
@@ -13,7 +14,6 @@ export default function MarkCompleteButton({ promptId, isCompleted: initialCompl
   const [isLoading, setIsLoading] = useState(false)
 
   const handleToggle = async () => {
-    console.log('Button clicked! promptId:', promptId)
     setIsLoading(true)
 
     try {
@@ -21,22 +21,30 @@ export default function MarkCompleteButton({ promptId, isCompleted: initialCompl
         const result = await unmarkPromptComplete(promptId)
         if (result.success) {
           setIsCompleted(false)
+          toast.success('Activity unmarked')
         } else {
           console.error('Unmark error:', result.error)
-          alert(result.error || 'Failed to unmark prompt')
+          toast.error('Failed to unmark activity', {
+            description: result.error || 'Please try again'
+          })
         }
       } else {
         const result = await markPromptComplete(promptId)
         if (result.success) {
           setIsCompleted(true)
+          toast.success('Activity marked complete!')
         } else {
           console.error('Mark complete error:', result.error)
-          alert(result.error || 'Failed to mark prompt complete')
+          toast.error('Failed to mark complete', {
+            description: result.error || 'Please try again'
+          })
         }
       }
     } catch (error) {
       console.error('Button error:', error)
-      alert('An unexpected error occurred')
+      toast.error('An unexpected error occurred', {
+        description: 'Please try again or contact support'
+      })
     }
 
     setIsLoading(false)

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { createBrowserClient } from '@supabase/ssr'
 
 interface FavoriteButtonProps {
@@ -35,6 +36,7 @@ export default function FavoriteButton({ promptId, initialIsFavorited = false }:
 
         if (error) throw error
         setIsFavorited(false)
+        toast.success('Removed from favorites')
       } else {
         // Add favorite
         const { error } = await supabase
@@ -46,10 +48,13 @@ export default function FavoriteButton({ promptId, initialIsFavorited = false }:
 
         if (error) throw error
         setIsFavorited(true)
+        toast.success('Added to favorites')
       }
     } catch (error: any) {
       console.error('Error toggling favorite:', error)
-      alert('Failed to update favorite. Please try again.')
+      toast.error('Failed to update favorite', {
+        description: 'Please try again'
+      })
     } finally {
       setIsLoading(false)
     }
