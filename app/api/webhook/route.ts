@@ -56,7 +56,9 @@ export async function POST(request: Request) {
           })
           .eq('id', session.metadata?.user_id)
 
-        console.log('Subscription activated:', session.metadata?.user_id)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Subscription activated:', session.metadata?.user_id)
+        }
         break
       }
 
@@ -75,7 +77,9 @@ export async function POST(request: Request) {
           })
           .eq('stripe_subscription_id', subscription.id)
 
-        console.log('Subscription updated:', subscription.id, status)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Subscription updated:', subscription.id, status)
+        }
         break
       }
 
@@ -91,7 +95,9 @@ export async function POST(request: Request) {
           })
           .eq('stripe_subscription_id', subscription.id)
 
-        console.log('Subscription cancelled:', subscription.id)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Subscription cancelled:', subscription.id)
+        }
         break
       }
 
@@ -108,12 +114,16 @@ export async function POST(request: Request) {
             .eq('stripe_subscription_id', invoice.subscription as string)
         }
 
-        console.log('Payment failed:', invoice.id)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Payment failed:', invoice.id)
+        }
         break
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`)
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Unhandled event type: ${event.type}`)
+        }
     }
 
     return NextResponse.json({ received: true })
