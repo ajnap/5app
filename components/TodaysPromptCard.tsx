@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import ActivityTimer from './ActivityTimer'
 
 interface Prompt {
@@ -18,6 +19,7 @@ interface TodaysPromptCardProps {
   prompt: Prompt | null
   childName: string
   childAge: number
+  childId?: string
   completedToday: boolean
   onMarkComplete: (durationSeconds?: number) => void
 }
@@ -26,10 +28,13 @@ export default function TodaysPromptCard({
   prompt,
   childName,
   childAge,
+  childId,
   completedToday,
   onMarkComplete,
 }: TodaysPromptCardProps) {
   const [timerActive, setTimerActive] = useState(false)
+  const [personalizedActivity, setPersonalizedActivity] = useState<string | null>(null)
+  const [isPersonalizing, setIsPersonalizing] = useState(false)
 
   if (!prompt) {
     return (
@@ -65,6 +70,46 @@ export default function TodaysPromptCard({
 
   const handleTimerComplete = (durationSeconds: number) => {
     onMarkComplete(durationSeconds)
+  }
+
+  const handlePersonalize = async () => {
+    if (!childId || !prompt) {
+      toast.error('Unable to personalize', {
+        description: 'Please select a child first'
+      })
+      return
+    }
+
+    setIsPersonalizing(true)
+
+    try {
+      const response = await fetch('/api/personalize-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          promptId: prompt.id,
+          childId: childId,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to personalize')
+      }
+
+      const data = await response.json()
+      setPersonalizedActivity(data.personalized)
+
+      toast.success('✨ Activity personalized with AI!', {
+        description: `Tailored specifically for ${childName}`
+      })
+    } catch (error) {
+      console.error('Personalization error:', error)
+      toast.error('Failed to personalize', {
+        description: 'Please try again'
+      })
+    } finally {
+      setIsPersonalizing(false)
+    }
   }
 
   if (completedToday) {
@@ -119,11 +164,43 @@ export default function TodaysPromptCard({
           {prompt.description}
         </p>
         <div className="border-t border-gray-200 pt-4">
-          <h4 className="font-semibold text-gray-900 mb-2">Activity:</h4>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-semibold text-gray-900">Activity:</h4>
+            {personalizedActivity && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 border border-purple-300">
+                ✨ AI Personalized
+              </span>
+            )}
+          </div>
           <p className="text-gray-700 leading-relaxed">
-            {prompt.activity}
+            {personalizedActivity || prompt.activity}
           </p>
         </div>
+
+        {/* AI Personalization Button */}
+        {childId && !personalizedActivity && (
+          <div className="border-t border-gray-200 mt-4 pt-4">
+            <button
+              onClick={handlePersonalize}
+              disabled={isPersonalizing}
+              className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isPersonalizing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  Personalizing with AI...
+                </>
+              ) : (
+                <>
+                  ✨ Personalize with AI for {childName}
+                </>
+              )}
+            </button>
+            <p className="text-xs text-gray-500 text-center mt-2">
+              Uses {childName}'s profile to create a custom activity
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Activity Timer or CTA Button */}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -11,7 +11,16 @@ interface AdminResetButtonProps {
 
 export default function AdminResetButton({ userId }: AdminResetButtonProps) {
   const [isResetting, setIsResetting] = useState(false)
+  const [isLocalhost, setIsLocalhost] = useState(false)
   const router = useRouter()
+
+  // Check if we're on localhost after component mounts (client-side only)
+  useEffect(() => {
+    setIsLocalhost(
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1'
+    )
+  }, [])
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -53,9 +62,6 @@ export default function AdminResetButton({ userId }: AdminResetButtonProps) {
   }
 
   // Only show on localhost
-  const isLocalhost = typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-
   if (!isLocalhost) {
     return null
   }

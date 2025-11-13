@@ -217,6 +217,7 @@ export default function DashboardClient({
           prompt={todaysPrompt.id ? todaysPrompt : null}
           childName={selectedChild?.name || 'your child'}
           childAge={selectedChild?.age || 0}
+          childId={selectedChild?.id}
           completedToday={completedToday}
           onMarkComplete={handleMarkComplete}
         />

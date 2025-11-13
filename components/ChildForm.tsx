@@ -15,11 +15,6 @@ const PERSONALITY_OPTIONS = [
   'Independent', 'Affectionate', 'Creative', 'Analytical', 'Playful', 'Serious'
 ]
 
-const CHALLENGE_OPTIONS = [
-  'Tantrums', 'Bedtime Resistance', 'Screen Time', 'Homework', 'Sibling Rivalry',
-  'Eating/Picky Eating', 'Listening', 'Sharing', 'Separation Anxiety', 'Talking Back'
-]
-
 const COMMUNICATION_STYLES = [
   'Words of Affirmation',
   'Physical Touch',
@@ -44,10 +39,16 @@ const TIME_OF_DAY_OPTIONS = [
 
 const STRENGTH_SUGGESTIONS = [
   'Kind', 'Helpful', 'Funny', 'Smart', 'Brave', 'Creative',
-  'Athletic', 'Musical', 'Artistic', 'Patient', 'Leader', 'Problem Solver'
+  'Athletic', 'Musical', 'Artistic', 'Patient', 'Leader', 'Problem Solver',
+  'Empathetic', 'Determined', 'Organized', 'Curious', 'Resilient', 'Confident'
 ]
 
-export default function ChildFormEnhanced({ existingChild }: { existingChild?: any }) {
+const MOTIVATOR_SUGGESTIONS = [
+  'Praise', 'Stickers/Rewards', 'Screen Time', 'Special Outings', 'One-on-One Time',
+  'Treats', 'Competition', 'Helping Others', 'Learning New Things', 'Physical Activity'
+]
+
+export default function ChildForm({ existingChild }: { existingChild?: any }) {
   const router = useRouter()
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -58,26 +59,47 @@ export default function ChildFormEnhanced({ existingChild }: { existingChild?: a
   const [name, setName] = useState(existingChild?.name || '')
   const [birthDate, setBirthDate] = useState(existingChild?.birth_date || '')
 
-  // Existing fields
+  // Existing fields (kept for backwards compatibility)
   const [interests, setInterests] = useState<string[]>(existingChild?.interests || [])
   const [personalities, setPersonalities] = useState<string[]>(existingChild?.personality_traits || [])
   const [challenges, setChallenges] = useState<string[]>(existingChild?.current_challenges || [])
   const [notes, setNotes] = useState(existingChild?.notes || '')
 
-  // New AI-enhancement fields
+  // Connection & Communication
   const [communicationStyle, setCommunicationStyle] = useState<string[]>(existingChild?.communication_style || [])
-  const [learningStyle, setLearningStyle] = useState(existingChild?.learning_style || '')
   const [bestTimeOfDay, setBestTimeOfDay] = useState(existingChild?.best_time_of_day || '')
-  const [strengths, setStrengths] = useState<string[]>(existingChild?.strengths || [])
-  const [developmentalGoals, setDevelopmentalGoals] = useState<string[]>(existingChild?.developmental_goals || [])
-  const [favoriteActivities, setFavoriteActivities] = useState<string[]>(existingChild?.favorite_activities || [])
   const [connectionInsights, setConnectionInsights] = useState(existingChild?.connection_insights || '')
+
+  // Strengths & Growth
+  const [strengths, setStrengths] = useState<string[]>(existingChild?.strengths || [])
+  const [challengesWeaknesses, setChallengesWeaknesses] = useState<string[]>(existingChild?.challenges_weaknesses || [])
+  const [developmentalGoals, setDevelopmentalGoals] = useState<string[]>(existingChild?.developmental_goals || [])
+  const [currentFocusAreas, setCurrentFocusAreas] = useState<string[]>(existingChild?.current_focus_areas || [])
+
+  // Learning & Preferences
+  const [learningStyle, setLearningStyle] = useState(existingChild?.learning_style || '')
+  const [sensoryPreferences, setSensoryPreferences] = useState(existingChild?.sensory_preferences || '')
+  const [socialPreferences, setSocialPreferences] = useState(existingChild?.social_preferences || '')
+  const [favoriteActivities, setFavoriteActivities] = useState<string[]>(existingChild?.favorite_activities || [])
+
+  // Behavior Patterns
+  const [motivators, setMotivators] = useState<string[]>(existingChild?.motivators || [])
+  const [triggersStressors, setTriggersStressors] = useState<string[]>(existingChild?.triggers_stressors || [])
+  const [emotionalRegulation, setEmotionalRegulation] = useState(existingChild?.emotional_regulation || '')
+  const [disciplineApproach, setDisciplineApproach] = useState(existingChild?.discipline_approach || '')
+  const [energyPatterns, setEnergyPatterns] = useState(existingChild?.energy_patterns || '')
+
+  // Special Considerations
   const [specialConsiderations, setSpecialConsiderations] = useState(existingChild?.special_considerations || '')
 
   // Custom inputs for arrays
   const [customStrength, setCustomStrength] = useState('')
+  const [customWeakness, setCustomWeakness] = useState('')
   const [customGoal, setCustomGoal] = useState('')
+  const [customFocus, setCustomFocus] = useState('')
   const [customActivity, setCustomActivity] = useState('')
+  const [customMotivator, setCustomMotivator] = useState('')
+  const [customTrigger, setCustomTrigger] = useState('')
 
   const [isLoading, setIsLoading] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -103,66 +125,86 @@ export default function ChildFormEnhanced({ existingChild }: { existingChild?: a
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!name.trim()) {
+      toast.error('Please enter a name')
+      return
+    }
+
+    if (!birthDate) {
+      toast.error('Please select a birth date')
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (!user) {
-        throw new Error('Not authenticated')
-      }
-
       const profileData = {
-        name,
+        name: name.trim(),
         birth_date: birthDate,
+
+        // Existing fields
         interests,
         personality_traits: personalities,
         current_challenges: challenges,
         notes,
-        // New fields
+
+        // Connection & Communication
         communication_style: communicationStyle,
-        learning_style: learningStyle,
-        best_time_of_day: bestTimeOfDay,
+        best_time_of_day: bestTimeOfDay || null,
+        connection_insights: connectionInsights || null,
+
+        // Strengths & Growth
         strengths,
+        challenges_weaknesses: challengesWeaknesses,
         developmental_goals: developmentalGoals,
+        current_focus_areas: currentFocusAreas,
+
+        // Learning & Preferences
+        learning_style: learningStyle || null,
+        sensory_preferences: sensoryPreferences || null,
+        social_preferences: socialPreferences || null,
         favorite_activities: favoriteActivities,
-        connection_insights: connectionInsights,
-        special_considerations: specialConsiderations,
+
+        // Behavior Patterns
+        motivators,
+        triggers_stressors: triggersStressors,
+        emotional_regulation: emotionalRegulation || null,
+        discipline_approach: disciplineApproach || null,
+        energy_patterns: energyPatterns || null,
+
+        // Special Considerations
+        special_considerations: specialConsiderations || null,
       }
 
       if (existingChild) {
         // Update existing child
-        const { error: updateError } = await supabase
+        const { error } = await supabase
           .from('child_profiles')
           .update(profileData)
           .eq('id', existingChild.id)
 
-        if (updateError) throw updateError
-        toast.success('Child profile updated!', {
-          description: 'Your changes have been saved'
-        })
+        if (error) throw error
+        toast.success('Profile updated successfully!')
       } else {
         // Create new child
-        const { error: insertError } = await supabase
-          .from('child_profiles')
-          .insert({
-            user_id: user.id,
-            ...profileData
-          })
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not authenticated')
 
-        if (insertError) throw insertError
-        toast.success('Child profile created!', {
-          description: `${name} has been added to your family`
-        })
+        const { error } = await supabase
+          .from('child_profiles')
+          .insert({ ...profileData, user_id: user.id })
+
+        if (error) throw error
+        toast.success('Child profile created!')
       }
 
-      // Redirect to children page
       router.push('/children')
       router.refresh()
-    } catch (err: any) {
-      console.error('Error saving child:', err)
+    } catch (error: any) {
+      console.error('Error saving child profile:', error)
       toast.error('Failed to save profile', {
-        description: err.message || 'Please try again'
+        description: error.message
       })
     } finally {
       setIsLoading(false)
@@ -170,405 +212,645 @@ export default function ChildFormEnhanced({ existingChild }: { existingChild?: a
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      {/* ========== BASICS ========== */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-100">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Basic Information</h3>
+    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-8">
+      {/* Basic Information */}
+      <div className="card">
+        <h2 className="text-2xl font-bold gradient-text mb-6">Basic Information</h2>
 
-        {/* Name */}
-        <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Child's Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary-500 focus:outline-none transition-colors text-gray-900"
-            placeholder="e.g., Emma"
-          />
-        </div>
-
-        {/* Birth Date */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Birth Date <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="date"
-            value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
-            required
-            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary-500 focus:outline-none transition-colors text-gray-900"
-          />
-          <p className="text-xs text-gray-500 mt-1">This helps us provide age-appropriate activities</p>
-        </div>
-      </div>
-
-      {/* ========== PERSONALITY & INTERESTS ========== */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-100">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Personality & Interests</h3>
-
-        {/* Interests */}
-        <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
-            What are they interested in? (Optional)
-          </label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {INTEREST_OPTIONS.map(interest => (
-              <button
-                key={interest}
-                type="button"
-                onClick={() => toggleSelection(interest, interests, setInterests)}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-                  interests.includes(interest)
-                    ? 'bg-primary-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {interest}
-              </button>
-            ))}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              Name *
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none transition-colors text-gray-900"
+              placeholder="Emma"
+              required
+            />
           </div>
-        </div>
 
-        {/* Personality */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
-            How would you describe their personality? (Optional)
-          </label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {PERSONALITY_OPTIONS.map(personality => (
-              <button
-                key={personality}
-                type="button"
-                onClick={() => toggleSelection(personality, personalities, setPersonalities)}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-                  personalities.includes(personality)
-                    ? 'bg-purple-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {personality}
-              </button>
-            ))}
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              Birth Date *
+            </label>
+            <input
+              type="date"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+              max={new Date().toISOString().split('T')[0]}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none transition-colors text-gray-900"
+              required
+            />
           </div>
         </div>
       </div>
 
-      {/* ========== TOGGLE FOR ADVANCED SECTIONS ========== */}
+      {/* Personality & Interests */}
+      <div className="card">
+        <h2 className="text-2xl font-bold gradient-text mb-6">Personality & Interests</h2>
+
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-3">
+              Interests
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {INTEREST_OPTIONS.map(interest => (
+                <button
+                  key={interest}
+                  type="button"
+                  onClick={() => toggleSelection(interest, interests, setInterests)}
+                  className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                    interests.includes(interest)
+                      ? 'border-primary-500 bg-primary-50 text-primary-700 font-semibold'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                  }`}
+                >
+                  {interest}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-3">
+              Personality Traits
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {PERSONALITY_OPTIONS.map(trait => (
+                <button
+                  key={trait}
+                  type="button"
+                  onClick={() => toggleSelection(trait, personalities, setPersonalities)}
+                  className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                    personalities.includes(trait)
+                      ? 'border-primary-500 bg-primary-50 text-primary-700 font-semibold'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                  }`}
+                >
+                  {trait}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              Additional Notes
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none transition-colors text-gray-900 placeholder-gray-500"
+              placeholder="Anything else about your child's personality or interests..."
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Advanced Details Toggle */}
       <div className="text-center">
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-primary-100 to-purple-100 text-primary-700 font-semibold hover:shadow-md transition-all"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
         >
-          <span>{showAdvanced ? '−' : '+'}</span>
-          {showAdvanced ? 'Hide' : 'Add More Details'} for AI Personalization
-          <span className="text-sm opacity-75">(Optional but recommended)</span>
+          {showAdvanced ? '📋 Hide' : '🤖 Add'} Detailed AI Personalization Fields
+          <span className="text-sm opacity-90">
+            ({showAdvanced ? 'collapse' : 'recommended for best experience'})
+          </span>
         </button>
       </div>
 
-      {/* ========== ADVANCED SECTIONS (COLLAPSIBLE) ========== */}
+      {/* Advanced AI Personalization Fields */}
       {showAdvanced && (
         <div className="space-y-8 animate-in fade-in duration-500">
 
-          {/* How They Connect */}
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 shadow-sm border-2 border-blue-100">
-            <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <span>💖</span> How They Connect Best
-            </h3>
-            <p className="text-sm text-gray-600 mb-4">Help us suggest activities that match their style</p>
+          {/* Connection & Communication */}
+          <div className="card bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200">
+            <h2 className="text-2xl font-bold text-blue-900 mb-6 flex items-center gap-2">
+              💙 Connection & Communication
+            </h2>
 
-            {/* Communication Style */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                How do they best receive love/connection?
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {COMMUNICATION_STYLES.map(style => (
-                  <button
-                    key={style}
-                    type="button"
-                    onClick={() => toggleSelection(style, communicationStyle, setCommunicationStyle)}
-                    className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-                      communicationStyle.includes(style)
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'bg-white text-gray-700 hover:bg-blue-50'
-                    }`}
-                  >
-                    {style}
-                  </button>
-                ))}
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-3">
+                  How They Best Receive Love & Connection
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {COMMUNICATION_STYLES.map(style => (
+                    <button
+                      key={style}
+                      type="button"
+                      onClick={() => toggleSelection(style, communicationStyle, setCommunicationStyle)}
+                      className={`px-4 py-3 rounded-lg border-2 transition-all text-left ${
+                        communicationStyle.includes(style)
+                          ? 'border-blue-500 bg-blue-100 text-blue-900 font-semibold'
+                          : 'border-gray-200 bg-white hover:border-gray-300 text-gray-700'
+                      }`}
+                    >
+                      {style}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Learning Style */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                How do they learn best?
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {LEARNING_STYLES.map(style => (
-                  <button
-                    key={style.value}
-                    type="button"
-                    onClick={() => setLearningStyle(style.value)}
-                    className={`px-4 py-3 rounded-xl font-medium text-sm text-left transition-all ${
-                      learningStyle === style.value
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'bg-white text-gray-700 hover:bg-blue-50'
-                    }`}
-                  >
-                    {style.label}
-                  </button>
-                ))}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-3">
+                  Best Time of Day for Connection
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {TIME_OF_DAY_OPTIONS.map(time => (
+                    <button
+                      key={time.value}
+                      type="button"
+                      onClick={() => setBestTimeOfDay(time.value)}
+                      className={`px-4 py-3 rounded-lg border-2 transition-all ${
+                        bestTimeOfDay === time.value
+                          ? 'border-blue-500 bg-blue-100 text-blue-900 font-semibold'
+                          : 'border-gray-200 bg-white hover:border-gray-300 text-gray-700'
+                      }`}
+                    >
+                      {time.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Best Time of Day */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                When are they most engaged?
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {TIME_OF_DAY_OPTIONS.map(time => (
-                  <button
-                    key={time.value}
-                    type="button"
-                    onClick={() => setBestTimeOfDay(time.value)}
-                    className={`px-4 py-3 rounded-xl font-medium text-sm transition-all ${
-                      bestTimeOfDay === time.value
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'bg-white text-gray-700 hover:bg-blue-50'
-                    }`}
-                  >
-                    {time.label}
-                  </button>
-                ))}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  What Works Well for Connection
+                </label>
+                <textarea
+                  value={connectionInsights}
+                  onChange={(e) => setConnectionInsights(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-gray-900 placeholder-gray-500"
+                  placeholder="e.g., 'Loves bedtime reading together', 'Opens up during car rides', 'Enjoys helping me cook'"
+                />
               </div>
             </div>
           </div>
 
-          {/* Strengths & Goals */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 shadow-sm border-2 border-green-100">
-            <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <span>⭐</span> Strengths & Growth Areas
-            </h3>
-            <p className="text-sm text-gray-600 mb-4">Build on their strengths and support their development</p>
+          {/* Strengths & Growth */}
+          <div className="card bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
+            <h2 className="text-2xl font-bold text-green-900 mb-6 flex items-center gap-2">
+              🌱 Strengths & Growth Areas
+            </h2>
 
-            {/* Strengths */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                What are they naturally good at?
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
-                {STRENGTH_SUGGESTIONS.map(strength => (
-                  <button
-                    key={strength}
-                    type="button"
-                    onClick={() => toggleSelection(strength, strengths, setStrengths)}
-                    className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-                      strengths.includes(strength)
-                        ? 'bg-green-600 text-white shadow-md'
-                        : 'bg-white text-gray-700 hover:bg-green-50'
-                    }`}
-                  >
-                    {strength}
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={customStrength}
-                  onChange={(e) => setCustomStrength(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomItem(customStrength, strengths, setStrengths, setCustomStrength))}
-                  placeholder="Add custom strength..."
-                  className="flex-1 px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:outline-none text-sm text-gray-900 bg-white"
-                />
-                <button
-                  type="button"
-                  onClick={() => addCustomItem(customStrength, strengths, setStrengths, setCustomStrength)}
-                  className="px-4 py-2 rounded-xl bg-green-600 text-white font-semibold text-sm hover:bg-green-700"
-                >
-                  Add
-                </button>
-              </div>
-              {strengths.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {strengths.filter(s => !STRENGTH_SUGGESTIONS.includes(s)).map(strength => (
-                    <span key={strength} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-3">
+                  Natural Strengths & Talents
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+                  {STRENGTH_SUGGESTIONS.map(strength => (
+                    <button
+                      key={strength}
+                      type="button"
+                      onClick={() => toggleSelection(strength, strengths, setStrengths)}
+                      className={`px-3 py-2 rounded-lg border-2 transition-all text-sm ${
+                        strengths.includes(strength)
+                          ? 'border-green-500 bg-green-100 text-green-900 font-semibold'
+                          : 'border-gray-200 bg-white hover:border-gray-300 text-gray-700'
+                      }`}
+                    >
                       {strength}
-                      <button type="button" onClick={() => removeItem(strength, strengths, setStrengths)} className="hover:text-green-900">
-                        ×
-                      </button>
-                    </span>
+                    </button>
                   ))}
                 </div>
-              )}
-            </div>
-
-            {/* Developmental Goals */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                What are you working on together? (Growth areas, skills, behaviors)
-              </label>
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  value={customGoal}
-                  onChange={(e) => setCustomGoal(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomItem(customGoal, developmentalGoals, setDevelopmentalGoals, setCustomGoal))}
-                  placeholder="e.g., 'sharing with siblings', 'bedtime routine', 'emotional regulation'..."
-                  className="flex-1 px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:outline-none text-sm text-gray-900 bg-white"
-                />
-                <button
-                  type="button"
-                  onClick={() => addCustomItem(customGoal, developmentalGoals, setDevelopmentalGoals, setCustomGoal)}
-                  className="px-4 py-2 rounded-xl bg-green-600 text-white font-semibold text-sm hover:bg-green-700"
-                >
-                  Add
-                </button>
+                {strengths.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3 p-3 bg-white rounded-lg border border-green-200">
+                    {strengths.map(strength => (
+                      <span key={strength} className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-900 rounded-full text-sm font-medium">
+                        {strength}
+                        <button
+                          type="button"
+                          onClick={() => removeItem(strength, strengths, setStrengths)}
+                          className="text-green-700 hover:text-green-900"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customStrength}
+                    onChange={(e) => setCustomStrength(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomItem(customStrength, strengths, setStrengths, setCustomStrength))}
+                    placeholder="Add custom strength..."
+                    className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none text-sm text-gray-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => addCustomItem(customStrength, strengths, setStrengths, setCustomStrength)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                  >
+                    Add
+                  </button>
+                </div>
               </div>
-              {developmentalGoals.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {developmentalGoals.map(goal => (
-                    <span key={goal} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
-                      {goal}
-                      <button type="button" onClick={() => removeItem(goal, developmentalGoals, setDevelopmentalGoals)} className="hover:text-green-900">
-                        ×
-                      </button>
-                    </span>
-                  ))}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-3">
+                  Challenges & Areas for Support
+                </label>
+                {challengesWeaknesses.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3 p-3 bg-white rounded-lg border border-amber-200">
+                    {challengesWeaknesses.map(weakness => (
+                      <span key={weakness} className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-900 rounded-full text-sm font-medium">
+                        {weakness}
+                        <button
+                          type="button"
+                          onClick={() => removeItem(weakness, challengesWeaknesses, setChallengesWeaknesses)}
+                          className="text-amber-700 hover:text-amber-900"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customWeakness}
+                    onChange={(e) => setCustomWeakness(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomItem(customWeakness, challengesWeaknesses, setChallengesWeaknesses, setCustomWeakness))}
+                    placeholder="e.g., 'Struggles with transitions', 'Difficulty sharing'"
+                    className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none text-sm text-gray-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => addCustomItem(customWeakness, challengesWeaknesses, setChallengesWeaknesses, setCustomWeakness)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                  >
+                    Add
+                  </button>
                 </div>
-              )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-3">
+                  Developmental Goals
+                </label>
+                {developmentalGoals.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3 p-3 bg-white rounded-lg border border-green-200">
+                    {developmentalGoals.map(goal => (
+                      <span key={goal} className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-900 rounded-full text-sm font-medium">
+                        {goal}
+                        <button
+                          type="button"
+                          onClick={() => removeItem(goal, developmentalGoals, setDevelopmentalGoals)}
+                          className="text-green-700 hover:text-green-900"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customGoal}
+                    onChange={(e) => setCustomGoal(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomItem(customGoal, developmentalGoals, setDevelopmentalGoals, setCustomGoal))}
+                    placeholder="e.g., 'Learn to tie shoes', 'Build confidence in reading'"
+                    className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none text-sm text-gray-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => addCustomItem(customGoal, developmentalGoals, setDevelopmentalGoals, setCustomGoal)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-3">
+                  Current Focus Areas (What You Want to Work On)
+                </label>
+                {currentFocusAreas.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3 p-3 bg-white rounded-lg border border-green-200">
+                    {currentFocusAreas.map(focus => (
+                      <span key={focus} className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-900 rounded-full text-sm font-medium">
+                        {focus}
+                        <button
+                          type="button"
+                          onClick={() => removeItem(focus, currentFocusAreas, setCurrentFocusAreas)}
+                          className="text-green-700 hover:text-green-900"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customFocus}
+                    onChange={(e) => setCustomFocus(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomItem(customFocus, currentFocusAreas, setCurrentFocusAreas, setCustomFocus))}
+                    placeholder="e.g., 'Reducing screen time battles', 'Improving bedtime routine'"
+                    className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none text-sm text-gray-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => addCustomItem(customFocus, currentFocusAreas, setCurrentFocusAreas, setCustomFocus)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Favorites & Connection Insights */}
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 shadow-sm border-2 border-amber-100">
-            <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <span>🌟</span> Favorite Activities & Connection Insights
-            </h3>
-            <p className="text-sm text-gray-600 mb-4">What brings you closer together?</p>
+          {/* Learning & Preferences */}
+          <div className="card bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
+            <h2 className="text-2xl font-bold text-purple-900 mb-6 flex items-center gap-2">
+              🎨 Learning & Preferences
+            </h2>
 
-            {/* Favorite Activities */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Favorite activities to do together
-              </label>
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  value={customActivity}
-                  onChange={(e) => setCustomActivity(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomItem(customActivity, favoriteActivities, setFavoriteActivities, setCustomActivity))}
-                  placeholder="e.g., 'building LEGO together', 'bedtime stories', 'cooking pancakes'..."
-                  className="flex-1 px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:outline-none text-sm text-gray-900 bg-white"
-                />
-                <button
-                  type="button"
-                  onClick={() => addCustomItem(customActivity, favoriteActivities, setFavoriteActivities, setCustomActivity)}
-                  className="px-4 py-2 rounded-xl bg-amber-600 text-white font-semibold text-sm hover:bg-amber-700"
-                >
-                  Add
-                </button>
-              </div>
-              {favoriteActivities.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {favoriteActivities.map(activity => (
-                    <span key={activity} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-sm">
-                      {activity}
-                      <button type="button" onClick={() => removeItem(activity, favoriteActivities, setFavoriteActivities)} className="hover:text-amber-900">
-                        ×
-                      </button>
-                    </span>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-3">
+                  Learning Style
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {LEARNING_STYLES.map(style => (
+                    <button
+                      key={style.value}
+                      type="button"
+                      onClick={() => setLearningStyle(style.value)}
+                      className={`px-4 py-3 rounded-lg border-2 transition-all text-left ${
+                        learningStyle === style.value
+                          ? 'border-purple-500 bg-purple-100 text-purple-900 font-semibold'
+                          : 'border-gray-200 bg-white hover:border-gray-300 text-gray-700'
+                      }`}
+                    >
+                      {style.label}
+                    </button>
                   ))}
                 </div>
-              )}
-            </div>
+              </div>
 
-            {/* Connection Insights */}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-3">
+                  Favorite Activities to Do Together
+                </label>
+                {favoriteActivities.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3 p-3 bg-white rounded-lg border border-purple-200">
+                    {favoriteActivities.map(activity => (
+                      <span key={activity} className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-900 rounded-full text-sm font-medium">
+                        {activity}
+                        <button
+                          type="button"
+                          onClick={() => removeItem(activity, favoriteActivities, setFavoriteActivities)}
+                          className="text-purple-700 hover:text-purple-900"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customActivity}
+                    onChange={(e) => setCustomActivity(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomItem(customActivity, favoriteActivities, setFavoriteActivities, setCustomActivity))}
+                    placeholder="e.g., 'Baking cookies', 'Playing catch', 'Building forts'"
+                    className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none text-sm text-gray-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => addCustomItem(customActivity, favoriteActivities, setFavoriteActivities, setCustomActivity)}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Social Preferences
+                </label>
+                <textarea
+                  value={socialPreferences}
+                  onChange={(e) => setSocialPreferences(e.target.value)}
+                  rows={2}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors text-gray-900 placeholder-gray-500"
+                  placeholder="e.g., 'Prefers one-on-one play', 'Loves group activities', 'Needs quiet time to recharge'"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Sensory Preferences
+                </label>
+                <textarea
+                  value={sensoryPreferences}
+                  onChange={(e) => setSensoryPreferences(e.target.value)}
+                  rows={2}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors text-gray-900 placeholder-gray-500"
+                  placeholder="e.g., 'Sensitive to loud noises', 'Loves soft textures', 'Dislikes certain food textures'"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Behavior Patterns */}
+          <div className="card bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
+            <h2 className="text-2xl font-bold text-amber-900 mb-6 flex items-center gap-2">
+              ⚡ Behavior & Emotional Patterns
+            </h2>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-3">
+                  What Motivates Them
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+                  {MOTIVATOR_SUGGESTIONS.map(motivator => (
+                    <button
+                      key={motivator}
+                      type="button"
+                      onClick={() => toggleSelection(motivator, motivators, setMotivators)}
+                      className={`px-3 py-2 rounded-lg border-2 transition-all text-sm ${
+                        motivators.includes(motivator)
+                          ? 'border-amber-500 bg-amber-100 text-amber-900 font-semibold'
+                          : 'border-gray-200 bg-white hover:border-gray-300 text-gray-700'
+                      }`}
+                    >
+                      {motivator}
+                    </button>
+                  ))}
+                </div>
+                {motivators.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3 p-3 bg-white rounded-lg border border-amber-200">
+                    {motivators.map(motivator => (
+                      <span key={motivator} className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-900 rounded-full text-sm font-medium">
+                        {motivator}
+                        <button
+                          type="button"
+                          onClick={() => removeItem(motivator, motivators, setMotivators)}
+                          className="text-amber-700 hover:text-amber-900"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customMotivator}
+                    onChange={(e) => setCustomMotivator(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomItem(customMotivator, motivators, setMotivators, setCustomMotivator))}
+                    placeholder="Add custom motivator..."
+                    className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none text-sm text-gray-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => addCustomItem(customMotivator, motivators, setMotivators, setCustomMotivator)}
+                    className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-3">
+                  Triggers & Stressors (What Upsets Them)
+                </label>
+                {triggersStressors.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3 p-3 bg-white rounded-lg border border-red-200">
+                    {triggersStressors.map(trigger => (
+                      <span key={trigger} className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-900 rounded-full text-sm font-medium">
+                        {trigger}
+                        <button
+                          type="button"
+                          onClick={() => removeItem(trigger, triggersStressors, setTriggersStressors)}
+                          className="text-red-700 hover:text-red-900"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customTrigger}
+                    onChange={(e) => setCustomTrigger(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomItem(customTrigger, triggersStressors, setTriggersStressors, setCustomTrigger))}
+                    placeholder="e.g., 'Being rushed', 'Loud environments', 'Hunger'"
+                    className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none text-sm text-gray-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => addCustomItem(customTrigger, triggersStressors, setTriggersStressors, setCustomTrigger)}
+                    className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Emotional Regulation
+                </label>
+                <textarea
+                  value={emotionalRegulation}
+                  onChange={(e) => setEmotionalRegulation(e.target.value)}
+                  rows={2}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none transition-colors text-gray-900 placeholder-gray-500"
+                  placeholder="e.g., 'Needs time to cool down', 'Calms with deep breaths', 'Tantrums when frustrated'"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Discipline Approach (What Works/Doesn't Work)
+                </label>
+                <textarea
+                  value={disciplineApproach}
+                  onChange={(e) => setDisciplineApproach(e.target.value)}
+                  rows={2}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none transition-colors text-gray-900 placeholder-gray-500"
+                  placeholder="e.g., 'Responds well to natural consequences', 'Time-outs backfire', 'Positive reinforcement works best'"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Energy Patterns Throughout Day
+                </label>
+                <textarea
+                  value={energyPatterns}
+                  onChange={(e) => setEnergyPatterns(e.target.value)}
+                  rows={2}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none transition-colors text-gray-900 placeholder-gray-500"
+                  placeholder="e.g., 'High energy in morning, crashes after lunch', 'Needs quiet time after school', 'Gets hyperactive before bed'"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Special Considerations */}
+          <div className="card bg-gradient-to-br from-red-50 to-pink-50 border-2 border-red-200">
+            <h2 className="text-2xl font-bold text-red-900 mb-6 flex items-center gap-2">
+              ⚕️ Special Considerations
+            </h2>
+
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Connection insights (What works well? What makes them light up?)
+              <label className="block text-sm font-medium text-gray-900 mb-2">
+                Medical, Developmental, or Other Important Context
               </label>
               <textarea
-                value={connectionInsights}
-                onChange={(e) => setConnectionInsights(e.target.value)}
-                rows={3}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:outline-none transition-colors text-gray-900 bg-white"
-                placeholder="e.g., 'Loves one-on-one time without siblings', 'Responds well to humor', 'Needs wind-down time after school'..."
+                value={specialConsiderations}
+                onChange={(e) => setSpecialConsiderations(e.target.value)}
+                rows={4}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none transition-colors text-gray-900 placeholder-gray-500"
+                placeholder="e.g., 'Allergic to peanuts', 'ADHD diagnosis - takes medication in morning', 'Speech delay - working with therapist', 'Anxiety around new situations'"
               />
             </div>
           </div>
         </div>
       )}
 
-      {/* ========== CHALLENGES ========== */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-100">
-        <h3 className="text-lg font-bold text-gray-900 mb-2">Current Challenges</h3>
-        <p className="text-sm text-gray-600 mb-4">This helps us suggest relevant activities (Optional)</p>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {CHALLENGE_OPTIONS.map(challenge => (
-            <button
-              key={challenge}
-              type="button"
-              onClick={() => toggleSelection(challenge, challenges, setChallenges)}
-              className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-                challenges.includes(challenge)
-                  ? 'bg-orange-600 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {challenge}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ========== SPECIAL CONSIDERATIONS ========== */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-100">
-        <h3 className="text-lg font-bold text-gray-900 mb-2">Special Considerations</h3>
-        <p className="text-sm text-gray-600 mb-4">Allergies, diagnoses, or other important context (Optional)</p>
-        <textarea
-          value={specialConsiderations}
-          onChange={(e) => setSpecialConsiderations(e.target.value)}
-          rows={2}
-          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary-500 focus:outline-none transition-colors text-gray-900"
-          placeholder="e.g., 'Peanut allergy', 'ADHD', 'Sensory processing needs', 'Hearing impaired'..."
-        />
-      </div>
-
-      {/* ========== ADDITIONAL NOTES ========== */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-100">
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Anything else we should know? (Optional)
-        </label>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={3}
-          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary-500 focus:outline-none transition-colors text-gray-900"
-          placeholder="Any other details that help us understand your child better..."
-        />
-      </div>
-
-      {/* ========== SUBMIT BUTTONS ========== */}
-      <div className="flex gap-4 sticky bottom-4 bg-white p-4 rounded-2xl shadow-xl border-2 border-gray-100">
+      {/* Action Buttons */}
+      <div className="flex gap-4 justify-end pb-8">
         <button
           type="button"
           onClick={() => router.back()}
-          className="flex-1 px-6 py-4 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+          className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+          disabled={isLoading}
         >
           Cancel
         </button>
         <button
           type="submit"
-          disabled={isLoading || !name || !birthDate}
-          className="flex-1 px-6 py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-700 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          disabled={isLoading}
+          className="px-8 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? 'Saving...' : existingChild ? 'Update Profile' : 'Create Profile'}
         </button>
