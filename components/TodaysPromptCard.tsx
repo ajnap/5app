@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import ActivityTimer from './ActivityTimer'
+import { generateConnectionEventUrl } from '@/lib/calendar'
 
 interface Prompt {
   id: string
@@ -70,6 +71,26 @@ export default function TodaysPromptCard({
 
   const handleTimerComplete = (durationSeconds: number) => {
     onMarkComplete(durationSeconds)
+  }
+
+  const handleAddToCalendar = () => {
+    // Default to scheduling for "now" or next convenient time
+    const scheduledTime = new Date()
+
+    const calendarUrl = generateConnectionEventUrl({
+      childName,
+      activityTitle: prompt.title,
+      activityDescription: personalizedActivity || prompt.activity,
+      scheduledTime,
+      estimatedMinutes: estimatedMinutes,
+    })
+
+    // Open Google Calendar in new tab
+    window.open(calendarUrl, '_blank')
+
+    toast.success('Opening Google Calendar', {
+      description: 'Event details have been pre-filled for you'
+    })
   }
 
   const handlePersonalize = async () => {
@@ -201,6 +222,19 @@ export default function TodaysPromptCard({
             </p>
           </div>
         )}
+
+        {/* Add to Calendar Button */}
+        <div className="border-t border-gray-200 mt-4 pt-4">
+          <button
+            onClick={handleAddToCalendar}
+            className="w-full bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg font-semibold text-sm shadow-sm border-2 border-gray-300 hover:border-gray-400 transition-all flex items-center justify-center gap-2"
+          >
+            📅 Add to Google Calendar
+          </button>
+          <p className="text-xs text-gray-500 text-center mt-2">
+            Schedule this {estimatedMinutes}-minute connection
+          </p>
+        </div>
       </div>
 
       {/* Activity Timer or CTA Button */}
