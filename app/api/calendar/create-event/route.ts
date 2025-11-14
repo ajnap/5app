@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { formatZodError } from '@/lib/validation'
 
 const createEventSchema = z.object({
-  childName: z.string().min(1),
+  childName: z.string().optional(),
   activityTitle: z.string().min(1),
   activityDescription: z.string().optional(),
   scheduledTime: z.string().datetime(),

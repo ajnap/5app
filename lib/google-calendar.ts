@@ -108,7 +108,7 @@ export async function createCalendarEvent({
   estimatedMinutes = 5,
   recurrence,
 }: {
-  childName: string
+  childName?: string
   activityTitle: string
   activityDescription?: string
   scheduledTime: Date
