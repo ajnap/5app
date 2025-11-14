@@ -194,7 +194,7 @@ export default function AddEventModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={`e.g., ${template.suggestedTitles[0]}`}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all placeholder:text-gray-500"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-gray-900 placeholder:text-gray-600 font-medium"
               required
             />
             {template.suggestedTitles.length > 0 && (
