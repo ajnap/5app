@@ -186,7 +186,7 @@ export async function getUpcomingConnectionEvents(maxResults: number = 10) {
     maxResults,
     singleEvents: true,
     orderBy: 'startTime',
-    q: '5-Min Connection', // Filter for our connection events
+    // Show all upcoming events (not just filtered ones)
   })
 
   return response.data.items || []

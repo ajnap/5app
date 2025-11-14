@@ -103,17 +103,32 @@ export default function DashboardClient({
   }
 
   const filteredPrompts = getFilteredPrompts()
-  const todaysPrompt = filteredPrompts[0] || {
-    id: null,
-    title: "Welcome to The Next 5 Minutes!",
-    description: "Your personalized prompt will appear here. Add your children to get age-appropriate activities!",
-    activity: "Set up your child profiles to get started with personalized prompts.",
-    category: 'connection',
-    age_categories: ['all'],
-    tags: []
-  }
 
   const selectedChild = children.find(c => c.id === selectedChildId)
+
+  // Use personalized recommendation as today's prompt if available
+  let todaysPrompt: Prompt | null = null
+  if (selectedChildId && recommendationsMap[selectedChildId]?.recommendations?.length > 0) {
+    // Use the top recommendation as today's prompt
+    const topRec = recommendationsMap[selectedChildId].recommendations[0]
+    todaysPrompt = topRec.prompt
+  } else if (filteredPrompts.length > 0) {
+    // Fallback to filtered prompts if no recommendations
+    todaysPrompt = filteredPrompts[0]
+  }
+
+  // Default welcome prompt if no child selected or no prompts available
+  if (!todaysPrompt) {
+    todaysPrompt = {
+      id: null as any,
+      title: "Welcome to The Next 5 Minutes!",
+      description: "Your personalized prompt will appear here. Add your children to get age-appropriate activities!",
+      activity: "Set up your child profiles to get started with personalized prompts.",
+      category: 'connection',
+      age_categories: ['all'],
+      tags: []
+    }
+  }
 
   // Handle marking prompt as complete with timer
   const handleMarkComplete = (durationSeconds?: number) => {
