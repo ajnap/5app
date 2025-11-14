@@ -67,6 +67,7 @@ export default function DashboardClient({
   const [completedToday, setCompletedToday] = useState(initialCompletedToday)
   const [reflectionOpen, setReflectionOpen] = useState(false)
   const [completingPromptId, setCompletingPromptId] = useState<string | null>(null)
+  const [completingChildId, setCompletingChildId] = useState<string | null>(null)
   const [completingDuration, setCompletingDuration] = useState<number | undefined>(undefined)
 
   // Celebration states
@@ -148,12 +149,14 @@ export default function DashboardClient({
       // Delay reflection modal until after milestone
       setTimeout(() => {
         setCompletingPromptId(todaysPrompt.id)
+        setCompletingChildId(selectedChildId)
         setCompletingDuration(durationSeconds)
         setReflectionOpen(true)
       }, 4500) // Milestone auto-closes at 4s
     } else {
       // No milestone, open reflection immediately
       setCompletingPromptId(todaysPrompt.id)
+      setCompletingChildId(selectedChildId)
       setCompletingDuration(durationSeconds)
       setReflectionOpen(true)
     }
@@ -172,6 +175,7 @@ export default function DashboardClient({
 
     setSelectedChildId(childId)
     setCompletingPromptId(promptId)
+    setCompletingChildId(childId) // Store child ID for reflection modal
 
     // Trigger confetti
     setShowConfetti(true)
@@ -290,11 +294,12 @@ export default function DashboardClient({
           isOpen={reflectionOpen}
           onClose={() => {
             setReflectionOpen(false)
+            setCompletingChildId(null)
             setCompletingDuration(undefined)
           }}
           promptId={completingPromptId}
           promptTitle={prompts.find(p => p.id === completingPromptId)?.title || todaysPrompt.title}
-          childId={selectedChildId}
+          childId={completingChildId}
           faithMode={faithMode}
           durationSeconds={completingDuration}
           estimatedMinutes={prompts.find(p => p.id === completingPromptId)?.estimated_minutes || todaysPrompt.estimated_minutes}
