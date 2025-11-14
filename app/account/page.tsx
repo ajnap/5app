@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SignOutButton from '@/components/SignOutButton'
 import CheckoutButton from '@/components/CheckoutButton'
 import ManageSubscriptionButton from '@/components/ManageSubscriptionButton'
+import CalendarConnection from '@/components/CalendarConnection'
 import { SUBSCRIPTION_STATUS, ROUTES } from '@/lib/constants'
 
 export default async function AccountPage() {
@@ -164,6 +165,11 @@ export default async function AccountPage() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Calendar Connection Card */}
+          <div className="fade-in mt-8" style={{animationDelay: '0.2s'}}>
+            <CalendarConnection />
           </div>
         </div>
       </main>

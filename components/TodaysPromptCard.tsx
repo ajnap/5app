@@ -73,24 +73,66 @@ export default function TodaysPromptCard({
     onMarkComplete(durationSeconds)
   }
 
-  const handleAddToCalendar = () => {
-    // Default to scheduling for "now" or next convenient time
-    const scheduledTime = new Date()
+  const handleAddToCalendar = async () => {
+    // Check if calendar is connected first
+    try {
+      const statusResponse = await fetch('/api/calendar/status')
+      const statusData = await statusResponse.json()
 
-    const calendarUrl = generateConnectionEventUrl({
-      childName,
-      activityTitle: prompt.title,
-      activityDescription: personalizedActivity || prompt.activity,
-      scheduledTime,
-      estimatedMinutes: estimatedMinutes,
-    })
+      if (!statusData.connected) {
+        // Fall back to Phase 1 (URL generation)
+        const scheduledTime = new Date()
 
-    // Open Google Calendar in new tab
-    window.open(calendarUrl, '_blank')
+        const calendarUrl = generateConnectionEventUrl({
+          childName,
+          activityTitle: prompt.title,
+          activityDescription: personalizedActivity || prompt.activity,
+          scheduledTime,
+          estimatedMinutes: estimatedMinutes,
+        })
 
-    toast.success('Opening Google Calendar', {
-      description: 'Event details have been pre-filled for you'
-    })
+        window.open(calendarUrl, '_blank')
+
+        toast.success('Opening Google Calendar', {
+          description: 'Event details have been pre-filled. Connect your calendar in Account Settings for automatic event creation!'
+        })
+        return
+      }
+
+      // Phase 2: Create event via API
+      const scheduledTime = new Date()
+
+      const response = await fetch('/api/calendar/create-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          childName,
+          activityTitle: prompt.title,
+          activityDescription: personalizedActivity || prompt.activity,
+          scheduledTime: scheduledTime.toISOString(),
+          estimatedMinutes: estimatedMinutes,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create calendar event')
+      }
+
+      const data = await response.json()
+
+      toast.success('✅ Event added to your calendar!', {
+        description: `${prompt.title} scheduled with ${childName}`,
+        action: data.event.htmlLink ? {
+          label: 'View in Calendar',
+          onClick: () => window.open(data.event.htmlLink, '_blank')
+        } : undefined
+      })
+    } catch (error) {
+      console.error('Calendar error:', error)
+      toast.error('Failed to add to calendar', {
+        description: 'Please try again or connect your calendar in Account Settings'
+      })
+    }
   }
 
   const handlePersonalize = async () => {
