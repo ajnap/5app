@@ -224,7 +224,7 @@ export default function DashboardClient({
         />
 
         {/* Upcoming Events Calendar Widget */}
-        <UpcomingEvents />
+        <UpcomingEvents children={children} />
 
         {/* Smart Recommendations - show for selected child */}
         {selectedChild && recommendationsMap[selectedChild.id]?.recommendations?.length > 0 && (
