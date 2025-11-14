@@ -123,10 +123,17 @@ export async function createCalendarEvent({
 
   const endTime = new Date(scheduledTime.getTime() + estimatedMinutes * 60000)
 
-  const eventTitle = `5-Min Connection: ${activityTitle} with ${childName}`
+  // If childName is empty, use activityTitle as-is (already formatted by AddEventModal)
+  // Otherwise, use legacy format for backwards compatibility with TodaysPromptCard
+  const eventTitle = childName
+    ? `5-Min Connection: ${activityTitle} with ${childName}`
+    : activityTitle
+
   const eventDescription = activityDescription
     ? `${activityDescription}\n\nThis moment will create a lasting memory! ❤️`
-    : `Spend ${estimatedMinutes} quality minutes connecting with ${childName}.\n\nThis moment will create a lasting memory! ❤️`
+    : childName
+    ? `Spend ${estimatedMinutes} quality minutes connecting with ${childName}.\n\nThis moment will create a lasting memory! ❤️`
+    : `${estimatedMinutes}-minute family event.\n\nThis moment will create a lasting memory! ❤️`
 
   const event: any = {
     summary: eventTitle,

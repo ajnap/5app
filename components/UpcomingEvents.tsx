@@ -137,20 +137,6 @@ export default function UpcomingEvents({ children = [] }: UpcomingEventsProps) {
     )
   }
 
-  if (events.length === 0) {
-    return (
-      <div className="card bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200">
-        <div className="text-center py-8">
-          <div className="text-5xl mb-4">📭</div>
-          <h3 className="text-xl font-bold text-gray-700 mb-2">No Upcoming Events</h3>
-          <p className="text-gray-600">
-            Start adding connection moments to your calendar to see them here!
-          </p>
-        </div>
-      </div>
-    )
-  }
-
   const handleOpenAddEvent = (eventType?: EventType) => {
     setPreselectedType(eventType)
     setIsAddEventModalOpen(true)
@@ -158,6 +144,52 @@ export default function UpcomingEvents({ children = [] }: UpcomingEventsProps) {
 
   const handleEventCreated = () => {
     fetchUpcomingEvents()
+  }
+
+  if (events.length === 0) {
+    return (
+      <>
+        <div className="card bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <span>📅</span>
+              Upcoming Schedule
+            </h2>
+            <button
+              onClick={() => handleOpenAddEvent()}
+              className="px-4 py-2 bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Event
+            </button>
+          </div>
+          <div className="text-center py-8">
+            <div className="text-5xl mb-4">📭</div>
+            <h3 className="text-xl font-bold text-gray-700 mb-2">No Upcoming Events</h3>
+            <p className="text-gray-600 mb-4">
+              Start adding events to coordinate your family schedule!
+            </p>
+            <button
+              onClick={() => handleOpenAddEvent()}
+              className="px-6 py-3 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-lg font-bold text-sm hover:shadow-lg transition-all"
+            >
+              Add Your First Event
+            </button>
+          </div>
+        </div>
+
+        {/* Add Event Modal */}
+        <AddEventModal
+          isOpen={isAddEventModalOpen}
+          onClose={() => setIsAddEventModalOpen(false)}
+          onEventCreated={handleEventCreated}
+          preselectedType={preselectedType}
+          children={children}
+        />
+      </>
+    )
   }
 
   return (

@@ -69,13 +69,12 @@ export default function AddEventModal({
       // Combine date and time
       const scheduledDateTime = new Date(`${date}T${time}`)
 
-      // Build event title with child name if applicable
-      let finalTitle = title
-      if (selectedChild && children.length > 0) {
-        const child = children.find(c => c.id === selectedChild)
-        if (child) {
-          finalTitle = `${title} with ${child.name}`
-        }
+      // Build complete event title with type label and child name
+      const child = selectedChild ? children.find(c => c.id === selectedChild) : null
+
+      let finalTitle = `${template.label}: ${title}`
+      if (child) {
+        finalTitle = `${template.label}: ${title} with ${child.name}`
       }
 
       // Create calendar event
@@ -83,8 +82,8 @@ export default function AddEventModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          childName: selectedChild ? children.find(c => c.id === selectedChild)?.name : '',
-          activityTitle: finalTitle,
+          childName: '', // Don't pass childName - it's already in the title
+          activityTitle: finalTitle, // Pass complete formatted title
           activityDescription: description,
           scheduledTime: scheduledDateTime.toISOString(),
           estimatedMinutes: duration,
