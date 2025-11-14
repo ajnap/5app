@@ -91,8 +91,14 @@ export default function AddEventModal({
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to create event')
+        let errorMessage = 'Failed to create event'
+        try {
+          const error = await response.json()
+          errorMessage = error.error || error.message || errorMessage
+        } catch {
+          // If response isn't JSON, use default message
+        }
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
@@ -155,7 +161,7 @@ export default function AddEventModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Event Type Selection */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <label className="block text-sm font-bold text-gray-900 mb-3">
               Event Type
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -179,7 +185,7 @@ export default function AddEventModal({
 
           {/* Title with Suggestions */}
           <div>
-            <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="title" className="block text-sm font-bold text-gray-900 mb-2">
               Event Title *
             </label>
             <input
@@ -188,7 +194,7 @@ export default function AddEventModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={`e.g., ${template.suggestedTitles[0]}`}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all placeholder:text-gray-500"
               required
             />
             {template.suggestedTitles.length > 0 && (
@@ -210,14 +216,14 @@ export default function AddEventModal({
           {/* Child Selection (if applicable) */}
           {children.length > 0 && selectedType !== 'date-night' && (
             <div>
-              <label htmlFor="child" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="child" className="block text-sm font-bold text-gray-900 mb-2">
                 With Child (Optional)
               </label>
               <select
                 id="child"
                 value={selectedChild}
                 onChange={(e) => setSelectedChild(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-gray-900"
               >
                 <option value="">None (or whole family)</option>
                 {children.map((child) => (
@@ -232,7 +238,7 @@ export default function AddEventModal({
           {/* Date and Time */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="date" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="date" className="block text-sm font-bold text-gray-900 mb-2">
                 Date *
               </label>
               <input
@@ -240,12 +246,12 @@ export default function AddEventModal({
                 id="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-gray-900"
                 required
               />
             </div>
             <div>
-              <label htmlFor="time" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="time" className="block text-sm font-bold text-gray-900 mb-2">
                 Time *
               </label>
               <input
@@ -253,7 +259,7 @@ export default function AddEventModal({
                 id="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-gray-900"
                 required
               />
             </div>
@@ -261,7 +267,7 @@ export default function AddEventModal({
 
           {/* Duration */}
           <div>
-            <label htmlFor="duration" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="duration" className="block text-sm font-bold text-gray-900 mb-2">
               Duration: {duration} minutes
             </label>
             <input
@@ -282,7 +288,7 @@ export default function AddEventModal({
 
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="description" className="block text-sm font-bold text-gray-900 mb-2">
               Description (Optional)
             </label>
             <textarea
@@ -291,7 +297,7 @@ export default function AddEventModal({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add any notes or details..."
               rows={3}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all resize-none"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all resize-none text-gray-900 placeholder:text-gray-500"
             />
           </div>
 
