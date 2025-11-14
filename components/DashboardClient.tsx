@@ -12,6 +12,7 @@ import ConfettiCelebration from './ConfettiCelebration'
 import MilestoneCelebration, { detectMilestone, type Milestone } from './MilestoneCelebration'
 import EmptyState from './EmptyState'
 import RecommendationSection from './RecommendationSection'
+import UpcomingEvents from './UpcomingEvents'
 import type { RecommendationResult } from '@/lib/recommendations/types'
 
 interface Child {
@@ -221,6 +222,9 @@ export default function DashboardClient({
           completedToday={completedToday}
           onMarkComplete={handleMarkComplete}
         />
+
+        {/* Upcoming Events Calendar Widget */}
+        <UpcomingEvents />
 
         {/* Smart Recommendations - show for selected child */}
         {selectedChild && recommendationsMap[selectedChild.id]?.recommendations?.length > 0 && (
