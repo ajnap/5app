@@ -3,15 +3,12 @@
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
-import ChildSelector from './ChildSelector'
-import FavoriteButton from './FavoriteButton'
-import TodaysPromptCard from './TodaysPromptCard'
+import ChildCardGrid from './ChildCardGrid'
 import ReflectionModal from './ReflectionModal'
 import QuickMemoryButton from './QuickMemoryButton'
 import ConfettiCelebration from './ConfettiCelebration'
 import MilestoneCelebration, { detectMilestone, type Milestone } from './MilestoneCelebration'
 import EmptyState from './EmptyState'
-import RecommendationSection from './RecommendationSection'
 import UpcomingEvents from './UpcomingEvents'
 import type { RecommendationResult } from '@/lib/recommendations/types'
 
@@ -42,6 +39,7 @@ interface DashboardClientProps {
   currentStreak?: number
   totalCompletions?: number
   recommendationsMap?: Record<string, RecommendationResult>
+  completedTodayMap?: Record<string, boolean>
 }
 
 export default function DashboardClient({
@@ -52,7 +50,8 @@ export default function DashboardClient({
   userId,
   currentStreak = 0,
   totalCompletions = 0,
-  recommendationsMap = {}
+  recommendationsMap = {},
+  completedTodayMap = {}
 }: DashboardClientProps) {
   const router = useRouter()
   const supabase = createBrowserClient(
@@ -60,11 +59,6 @@ export default function DashboardClient({
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  const [selectedChildId, setSelectedChildId] = useState<string | null>(
-    children.length === 1 ? children[0].id : null
-  )
-
-  const [completedToday, setCompletedToday] = useState(initialCompletedToday)
   const [reflectionOpen, setReflectionOpen] = useState(false)
   const [completingPromptId, setCompletingPromptId] = useState<string | null>(null)
   const [completingChildId, setCompletingChildId] = useState<string | null>(null)
@@ -75,96 +69,8 @@ export default function DashboardClient({
   const [milestone, setMilestone] = useState<Milestone | null>(null)
   const [milestoneOpen, setMilestoneOpen] = useState(false)
 
-  // Get age category for selected child
-  const getAgeCategory = (age: number): string => {
-    if (age < 2) return 'infant'
-    if (age < 5) return 'toddler'
-    if (age < 12) return 'elementary'
-    if (age < 18) return 'teen'
-    return 'young_adult'
-  }
-
-  // Filter prompts based on selected child
-  const getFilteredPrompts = () => {
-    if (!selectedChildId) {
-      // Show prompts for all age categories
-      return prompts
-    }
-
-    const selectedChild = children.find(c => c.id === selectedChildId)
-    if (!selectedChild) return prompts
-
-    const ageCategory = getAgeCategory(selectedChild.age)
-
-    // Filter prompts that match the child's age category or are marked as 'all'
-    return prompts.filter(prompt =>
-      prompt.age_categories.includes(ageCategory) ||
-      prompt.age_categories.includes('all')
-    )
-  }
-
-  const filteredPrompts = getFilteredPrompts()
-
-  const selectedChild = children.find(c => c.id === selectedChildId)
-
-  // Use personalized recommendation as today's prompt if available
-  let todaysPrompt: Prompt | null = null
-  if (selectedChildId && recommendationsMap[selectedChildId]?.recommendations?.length > 0) {
-    // Use the top recommendation as today's prompt
-    const topRec = recommendationsMap[selectedChildId].recommendations[0]
-    todaysPrompt = topRec.prompt
-  } else if (filteredPrompts.length > 0) {
-    // Fallback to filtered prompts if no recommendations
-    todaysPrompt = filteredPrompts[0]
-  }
-
-  // Default welcome prompt if no child selected or no prompts available
-  if (!todaysPrompt) {
-    todaysPrompt = {
-      id: null as any,
-      title: "Welcome to The Next 5 Minutes!",
-      description: "Your personalized prompt will appear here. Add your children to get age-appropriate activities!",
-      activity: "Set up your child profiles to get started with personalized prompts.",
-      category: 'connection',
-      age_categories: ['all'],
-      tags: []
-    }
-  }
-
-  // Handle marking prompt as complete with timer
-  const handleMarkComplete = (durationSeconds?: number) => {
-    if (!todaysPrompt.id) return
-
-    // Trigger confetti immediately
-    setShowConfetti(true)
-
-    // Check for milestones
-    const isFirstCompletion = totalCompletions === 0
-    const detectedMilestone = detectMilestone(currentStreak + 1, isFirstCompletion)
-
-    if (detectedMilestone) {
-      setMilestone(detectedMilestone)
-      setMilestoneOpen(true)
-
-      // Delay reflection modal until after milestone
-      setTimeout(() => {
-        setCompletingPromptId(todaysPrompt.id)
-        setCompletingChildId(selectedChildId)
-        setCompletingDuration(durationSeconds)
-        setReflectionOpen(true)
-      }, 4500) // Milestone auto-closes at 4s
-    } else {
-      // No milestone, open reflection immediately
-      setCompletingPromptId(todaysPrompt.id)
-      setCompletingChildId(selectedChildId)
-      setCompletingDuration(durationSeconds)
-      setReflectionOpen(true)
-    }
-  }
-
   // Handle completion from reflection modal
   const handleReflectionComplete = async (notes?: string) => {
-    setCompletedToday(true)
     router.refresh() // Refresh to update streak counter and recommendations
   }
 
@@ -173,7 +79,6 @@ export default function DashboardClient({
     const prompt = prompts.find(p => p.id === promptId)
     if (!prompt) return
 
-    setSelectedChildId(childId)
     setCompletingPromptId(promptId)
     setCompletingChildId(childId) // Store child ID for reflection modal
 
@@ -213,63 +118,16 @@ export default function DashboardClient({
   return (
     <>
       <div className="space-y-8">
-        {/* Child Selector */}
-        <ChildSelector
+        {/* Child Card Grid - shows all children with personalized prompts */}
+        <ChildCardGrid
           children={children}
-          selectedChildId={selectedChildId}
-          onSelectChild={setSelectedChildId}
-        />
-
-        {/* Personalization Badge */}
-        {selectedChild && (
-          <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 rounded-xl p-4 border-2 border-green-200 fade-in shadow-md hover:shadow-lg transition-all duration-300">
-            <p className="text-green-900 font-semibold flex items-center gap-2">
-              <span className="text-2xl">✨</span>
-              <span>
-                Personalized for {selectedChild.name} • {filteredPrompts.length} age-appropriate {filteredPrompts.length === 1 ? 'prompt' : 'prompts'} available
-              </span>
-            </p>
-          </div>
-        )}
-
-        {/* Today's Prompt Card */}
-        <TodaysPromptCard
-          prompt={todaysPrompt.id ? todaysPrompt : null}
-          childName={selectedChild?.name || 'your child'}
-          childAge={selectedChild?.age || 0}
-          childId={selectedChild?.id}
-          completedToday={completedToday}
-          onMarkComplete={handleMarkComplete}
+          recommendationsMap={recommendationsMap}
+          completedTodayMap={completedTodayMap}
+          onStartActivity={handleStartActivity}
         />
 
         {/* Upcoming Events Calendar Widget */}
         <UpcomingEvents children={children} />
-
-        {/* Smart Recommendations - show for selected child */}
-        {selectedChild && recommendationsMap[selectedChild.id]?.recommendations?.length > 0 && (
-          <RecommendationSection
-            childId={selectedChild.id}
-            childName={selectedChild.name}
-            recommendations={recommendationsMap[selectedChild.id].recommendations}
-            onStartActivity={handleStartActivity}
-          />
-        )}
-
-        {/* More Prompts Teaser */}
-        {filteredPrompts.length > 1 && (
-          <div className="text-center fade-in">
-            <p className="text-gray-600 mb-4">
-              {filteredPrompts.length - 1} more {selectedChild ? `prompts for ${selectedChild.name}` : 'prompts'} available
-            </p>
-            <a
-              href="/prompts"
-              className="inline-flex items-center gap-3 bg-gradient-to-r from-primary-600 via-primary-700 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all duration-300 pulse-glow"
-            >
-              <span className="text-2xl">📚</span>
-              Browse All Prompts
-            </a>
-          </div>
-        )}
       </div>
 
       {/* Confetti Celebration */}
@@ -284,7 +142,7 @@ export default function DashboardClient({
           milestone={milestone}
           isOpen={milestoneOpen}
           onClose={() => setMilestoneOpen(false)}
-          childName={selectedChild?.name}
+          childName={completingChildId ? children.find(c => c.id === completingChildId)?.name : undefined}
         />
       )}
 
@@ -298,11 +156,11 @@ export default function DashboardClient({
             setCompletingDuration(undefined)
           }}
           promptId={completingPromptId}
-          promptTitle={prompts.find(p => p.id === completingPromptId)?.title || todaysPrompt.title}
+          promptTitle={prompts.find(p => p.id === completingPromptId)?.title || ''}
           childId={completingChildId}
           faithMode={faithMode}
           durationSeconds={completingDuration}
-          estimatedMinutes={prompts.find(p => p.id === completingPromptId)?.estimated_minutes || todaysPrompt.estimated_minutes}
+          estimatedMinutes={prompts.find(p => p.id === completingPromptId)?.estimated_minutes}
           onComplete={handleReflectionComplete}
         />
       )}

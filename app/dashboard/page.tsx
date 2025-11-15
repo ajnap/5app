@@ -84,6 +84,20 @@ export default async function DashboardPage() {
 
   const completedToday = !!completedTodayData
 
+  // Calculate completedToday map per child
+  const completedTodayMap: Record<string, boolean> = {}
+  for (const child of children) {
+    const { data: childCompletionToday } = await supabase
+      .from('prompt_completions')
+      .select('id')
+      .eq('user_id', session.user.id)
+      .eq('child_id', child.id)
+      .eq('completion_date', localDateString)
+      .maybeSingle()
+
+    completedTodayMap[child.id] = !!childCompletionToday
+  }
+
   // Get current streak
   const { data: streakData } = await supabase
     .rpc('get_current_streak', { p_user_id: session.user.id })
@@ -314,6 +328,7 @@ export default async function DashboardPage() {
             currentStreak={currentStreak}
             totalCompletions={totalCompletions}
             recommendationsMap={recommendationsMap}
+            completedTodayMap={completedTodayMap}
           />
         </div>
       </main>
