@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '@/components/SignOutButton'
 import AddChildButton from '@/components/AddChildButton'
-import ChildCard from '@/components/ChildCard'
+import ChildProfileCard from '@/components/ChildProfileCard'
 import { ROUTES } from '@/lib/constants'
 
 export default async function ChildrenPage() {
@@ -95,7 +95,7 @@ export default async function ChildrenPage() {
             <>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 fade-in mb-8">
                 {childrenWithAge.map((child, index) => (
-                  <ChildCard
+                  <ChildProfileCard
                     key={child.id}
                     child={child}
                     index={index}
