@@ -10,14 +10,7 @@ import ConfettiCelebration from './ConfettiCelebration'
 import MilestoneCelebration, { detectMilestone, type Milestone } from './MilestoneCelebration'
 import EmptyState from './EmptyState'
 import UpcomingEvents from './UpcomingEvents'
-import type { RecommendationResult } from '@/lib/recommendations/types'
-
-interface Child {
-  id: string
-  name: string
-  age: number
-  birth_date: string
-}
+import type { RecommendationResult, Child } from '@/lib/recommendations/types'
 
 interface Prompt {
   id: string
