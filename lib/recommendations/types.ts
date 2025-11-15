@@ -105,3 +105,22 @@ export interface Favorite {
   prompt_id: string
   created_at: string
 }
+
+// Child-Centric Dashboard Types
+export interface ConnectionInsights {
+  weeklyMinutes: number
+  monthlyMinutes: number
+  totalCompletions: number
+  currentStreak: number
+  favoriteCategories: { category: string; count: number }[]
+  categoryDistribution: { category: string; percentage: number }[]
+  lastCompletionDate?: string
+}
+
+export interface PersonalizedTip {
+  id: string
+  type: 'developmental' | 'category_balance' | 'engagement' | 'streak' | 're_engagement'
+  message: string
+  priority: number
+  icon: string
+}
