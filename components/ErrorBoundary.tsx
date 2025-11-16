@@ -1,10 +1,12 @@
 'use client'
 
 import { Component, ReactNode } from 'react'
+import { captureError } from '@/lib/sentry'
 
 interface Props {
   children: ReactNode
   fallback?: ReactNode
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void
 }
 
 interface State {
@@ -26,12 +28,18 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error }
   }
 
-  componentDidCatch(error: Error, errorInfo: any) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error to console in development
     console.error('Error caught by boundary:', error, errorInfo)
 
-    // In production, you would send this to an error tracking service like Sentry
-    // Sentry.captureException(error, { contexts: { react: errorInfo } })
+    // Send to Sentry
+    captureError(error, {
+      tags: { component: 'error-boundary' },
+      extra: { errorInfo }
+    })
+
+    // Call custom error handler if provided
+    this.props.onError?.(error, errorInfo)
   }
 
   render() {
@@ -83,3 +91,5 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children
   }
 }
+
+export default ErrorBoundary

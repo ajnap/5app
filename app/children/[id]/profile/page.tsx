@@ -2,11 +2,15 @@ import { createServerClient } from '@/lib/supabase-server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '@/components/SignOutButton'
-import ChildGrowthStats from '@/components/ChildGrowthStats'
-import MemoryTimeline from '@/components/MemoryTimeline'
+import ChildDetailClient from '@/components/ChildDetailClient'
 import { ROUTES } from '@/lib/constants'
+import { generateRecommendations } from '@/lib/recommendations/engine'
+import { calculateInsights } from '@/lib/insights-calculator'
+import { generatePersonalizedTips } from '@/lib/tips-generator'
+import { captureError } from '@/lib/sentry'
+import type { PersonalizedTip } from '@/lib/recommendations/types'
 
-// Helper function to calculate age
+// Helper function to calculate age from birth_date
 function calculateAge(birthDate: string): number {
   const birth = new Date(birthDate)
   const today = new Date()
@@ -20,76 +24,162 @@ function calculateAge(birthDate: string): number {
   return age
 }
 
-// Helper to format date
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  })
-}
-
-export default async function ChildProfilePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ChildProfilePage({
+  params
+}: {
+  params: Promise<{ id: string }>
+}) {
   const { id } = await params
   const supabase = await createServerClient()
 
   // Check if user is authenticated
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session }
+  } = await supabase.auth.getSession()
 
   if (!session) {
     redirect(ROUTES.SIGNUP)
   }
 
+  // Get user's faith mode
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('faith_mode')
+    .eq('id', session.user.id)
+    .single()
+
+  const faithMode = profile?.faith_mode || false
+
   // Fetch the child profile
-  const { data: child, error } = await supabase
+  const { data: childData, error } = await supabase
     .from('child_profiles')
     .select('*')
     .eq('id', id)
-    .eq('user_id', session.user.id)
+    .eq('user_id', session.user.id) // Ensure user owns this child
     .single()
 
-  if (error || !child) {
+  if (error || !childData) {
     notFound()
   }
 
-  const age = calculateAge(child.birth_date)
+  // Calculate age
+  const child = {
+    ...childData,
+    age: calculateAge(childData.birth_date)
+  }
 
-  // Get child's completions
-  const { data: completions } = await supabase
+  // Get current streak
+  const { data: streakData } = await supabase.rpc('get_current_streak', {
+    p_user_id: session.user.id
+  })
+
+  const currentStreak = streakData || 0
+
+  // Get total completions
+  const { data: totalData } = await supabase.rpc('get_total_completions', {
+    p_user_id: session.user.id
+  })
+
+  const totalCompletions = totalData || 0
+
+  // Fetch all prompts for reference
+  const { data: promptsData } = await supabase
+    .from('daily_prompts')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  const prompts = promptsData || []
+
+  // Calculate connection insights
+  let insights
+  try {
+    insights = await calculateInsights(child.id, session.user.id, supabase)
+  } catch (error) {
+    captureError(error, {
+      tags: { component: 'child-profile', operation: 'calculate-insights' },
+      extra: { childId: child.id, userId: session.user.id }
+    })
+    // Fallback to empty insights
+    insights = {
+      weeklyMinutes: 0,
+      monthlyMinutes: 0,
+      totalCompletions: 0,
+      currentStreak: 0,
+      favoriteCategories: [],
+      categoryDistribution: [],
+      lastCompletionDate: undefined
+    }
+  }
+
+  // Fetch completions for tips generation and history
+  const { data: completionsData } = await supabase
     .from('prompt_completions')
     .select(`
       *,
-      daily_prompts (
-        title,
-        category
-      )
+      prompt:daily_prompts(*)
     `)
-    .eq('child_id', id)
+    .eq('user_id', session.user.id)
+    .eq('child_id', child.id)
     .order('completed_at', { ascending: false })
-    .limit(10)
+    .limit(50)
 
-  // Get child streak
-  const { data: childStreak } = await supabase
-    .rpc('get_child_streak', { p_child_id: id })
+  const completions = (completionsData || []).map((c: any) => ({
+    ...c,
+    prompt: c.prompt || undefined
+  }))
 
-  const streak = childStreak || 0
-  const totalActivities = completions?.length || 0
+  // Generate personalized tips
+  let tips: PersonalizedTip[]
+  try {
+    tips = generatePersonalizedTips(child, insights, completions)
+  } catch (error) {
+    captureError(error, {
+      tags: { component: 'child-profile', operation: 'generate-tips' },
+      extra: { childId: child.id, userId: session.user.id }
+    })
+    tips = []
+  }
+
+  // Generate recommendations
+  let recommendations: any[] = []
+  try {
+    const recommendationResult = await generateRecommendations(
+      {
+        userId: session.user.id,
+        childId: child.id,
+        faithMode,
+        limit: 5
+      },
+      supabase
+    )
+    recommendations = recommendationResult.recommendations
+  } catch (error) {
+    captureError(error, {
+      tags: { component: 'child-profile', operation: 'generate-recommendations' },
+      extra: { childId: child.id, userId: session.user.id }
+    })
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       {/* Navigation */}
       <nav className="container mx-auto px-6 py-6 fade-in">
-        <div className="flex justify-between items-center backdrop-blur-sm bg-white/30 rounded-2xl px-6 py-3 shadow-sm">
+        <div className="flex justify-between items-center backdrop-blur-md bg-white/40 rounded-2xl px-6 py-3 shadow-lg border border-white/50">
           <Link href={ROUTES.DASHBOARD} className="text-2xl font-bold gradient-text">
             The Next 5 Minutes
           </Link>
           <div className="flex items-center gap-4">
             <Link
-              href="/children"
+              href={ROUTES.DASHBOARD}
               className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
             >
-              ← Back
+              ← Back to Dashboard
+            </Link>
+            <Link
+              href={`/children/${child.id}`}
+              className="text-gray-700 hover:text-primary-600 font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-white/60"
+            >
+              Edit Profile
             </Link>
             <SignOutButton />
           </div>
@@ -98,83 +188,33 @@ export default async function ChildProfilePage({ params }: { params: Promise<{ i
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-10 fade-in">
-            <div className="text-6xl mb-4">👶</div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">{child.name}</h1>
-            <p className="text-xl text-gray-600">Age {age}</p>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {/* Streak Card */}
-            <div className="card bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200">
-              <div className="flex items-center gap-4">
-                <div className="text-5xl">🔥</div>
-                <div>
-                  <p className="text-3xl font-bold text-orange-900">{streak}</p>
-                  <p className="text-orange-700 font-medium">Day Streak</p>
-                </div>
-              </div>
+            <div className="text-6xl mb-4">
+              {child.age < 2 ? '👶' : child.age < 5 ? '🧒' : child.age < 12 ? '🧑' : child.age < 18 ? '👦' : '🧑‍🎓'}
             </div>
-
-            {/* Total Activities */}
-            <div className="card bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
-              <div className="flex items-center gap-4">
-                <div className="text-5xl">✅</div>
-                <div>
-                  <p className="text-3xl font-bold text-green-900">{totalActivities}</p>
-                  <p className="text-green-700 font-medium">Activities Completed</p>
-                </div>
-              </div>
-            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              {child.name}'s Connection Journey
+            </h1>
+            <p className="text-xl text-gray-600">
+              {child.age} years old • Deep insights and personalized recommendations
+            </p>
           </div>
 
-          {/* Growth Stats */}
-          <div className="mb-8 fade-in">
-            <ChildGrowthStats childId={id} />
-          </div>
-
-          {/* Memory Timeline */}
-          <div className="card mb-8 fade-in">
-            <MemoryTimeline
-              childId={id}
-              childName={child.name}
-              userId={session.user.id}
-            />
-          </div>
-
-          {/* Recent Activities */}
-          <div className="card fade-in">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Activities 🎯</h2>
-
-            {completions && completions.length > 0 ? (
-              <div className="space-y-3">
-                {completions.map((completion: any) => (
-                  <div
-                    key={completion.id}
-                    className="flex justify-between items-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200"
-                  >
-                    <div>
-                      <p className="font-semibold text-gray-900">{completion.daily_prompts?.title}</p>
-                      <p className="text-sm text-gray-600 capitalize">{completion.daily_prompts?.category}</p>
-                      {completion.reflection_note && (
-                        <p className="text-sm text-gray-700 mt-2 italic">"{completion.reflection_note}"</p>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-500">{formatDate(completion.completion_date)}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                <div className="text-5xl mb-4">🌟</div>
-                <p className="text-lg">No activities completed yet</p>
-                <p className="text-sm mt-2">Start your first activity from the dashboard!</p>
-              </div>
-            )}
-          </div>
+          {/* Client Component with all data */}
+          <ChildDetailClient
+            child={child}
+            insights={insights}
+            tips={tips}
+            completions={completions}
+            recommendations={recommendations}
+            prompts={prompts}
+            faithMode={faithMode}
+            userId={session.user.id}
+            currentStreak={currentStreak}
+            totalCompletions={totalCompletions}
+          />
         </div>
       </main>
     </div>
