@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Child, ScoredPrompt } from '@/lib/recommendations/types'
 import { usePromptRefresher } from '@/lib/hooks/usePromptRefresher'
@@ -25,7 +25,7 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   gratitude: '🙏'
 }
 
-export default function ChildCard({
+const ChildCard = memo(function ChildCard({
   child,
   recommendations,
   onStartActivity,
@@ -205,4 +205,6 @@ export default function ChildCard({
       </div>
     </div>
   )
-}
+})
+
+export default ChildCard
