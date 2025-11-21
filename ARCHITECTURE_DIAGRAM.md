@@ -8,182 +8,81 @@ This document contains the complete architecture diagram for The Next 5 Minutes 
 
 ```mermaid
 graph TB
-    subgraph "User's Browser"
+    subgraph Browser["User's Browser"]
         UI[React UI Components]
         SC[Server Components]
         CC[Client Components]
     end
 
-    subgraph "Vercel Edge Network"
-        Edge[Edge Runtime]
-        Middleware[Middleware - Cookie Refresh]
+    subgraph Vercel["Vercel - Next.js Application"]
+        Dashboard[Dashboard Page]
+        ChildProfile[Child Profile Page]
+        CheckoutAPI[Checkout API]
+        WebhookAPI[Webhook API]
+        RecEngine[Recommendation Engine]
+        Insights[Insights Calculator]
     end
 
-    subgraph "Next.js Application - Vercel"
-        subgraph "Pages - Server Side Rendering"
-            Landing[Landing Page /]
-            Dashboard[Dashboard /dashboard]
-            ChildProfile[Child Profile /children/id/profile]
-            ChildManage[Child Management /children]
-            Account[Account /account]
-            Signup[Sign Up /signup]
-        end
-
-        subgraph "API Routes - Backend Logic"
-            AuthAPI[/api/auth - OAuth Callbacks]
-            CheckoutAPI[/api/checkout - Create Sessions]
-            WebhookAPI[/api/webhook - Stripe Events]
-            PortalAPI[/api/portal - Customer Portal]
-            PersonalizeAPI[/api/personalize-prompt - AI]
-            CalendarAPI[/api/calendar/* - Google Cal]
-        end
-
-        subgraph "Business Logic - lib/"
-            RecEngine[Recommendation Engine<br/>engine.ts]
-            ScoreCalc[Score Calculator<br/>70/20/10 algorithm]
-            Insights[Insights Calculator<br/>stats & analytics]
-            TipsGen[Tips Generator<br/>personalized advice]
-            StripeLib[Stripe Utilities]
-            CalendarLib[Google Calendar Utils]
-        end
-
-        subgraph "UI Components - components/"
-            ChildCard[ChildCard - Displays child]
-            ReflectionModal[ReflectionModal - Capture notes]
-            ChildCardGrid[ChildCardGrid - Grid layout]
-            ConnectionInsights[ConnectionInsights - Stats]
-            ActivityHistory[ActivityHistory - Timeline]
-            PersonalizedTips[PersonalizedTips - Advice]
-        end
+    subgraph Supabase["Supabase Database"]
+        Auth[Authentication JWT]
+        ProfilesDB[profiles table]
+        ChildrenDB[child_profiles table]
+        PromptsDB[daily_prompts table]
+        CompletionsDB[prompt_completions table]
+        RLS[Row Level Security]
     end
 
-    subgraph "Supabase - Backend as a Service"
-        subgraph "Authentication"
-            SupaAuth[Supabase Auth<br/>JWT + httpOnly cookies]
-        end
-
-        subgraph "PostgreSQL Database"
-            ProfilesTable[(profiles<br/>user accounts + subscriptions)]
-            ChildrenTable[(child_profiles<br/>children data)]
-            PromptsTable[(daily_prompts<br/>78 activities)]
-            CompletionsTable[(prompt_completions<br/>activity history)]
-            FavoritesTable[(prompt_favorites<br/>saved activities)]
-            TokensTable[(google_oauth_tokens<br/>calendar access)]
-        end
-
-        subgraph "Row Level Security"
-            RLS[RLS Policies<br/>user_id = auth.uid]
-        end
-
-        subgraph "Database Functions"
-            StreakFunc[get_current_streak<br/>calculates consecutive days]
-            CompletionFunc[get_total_completions<br/>counts unique dates]
-        end
+    subgraph External["External Services"]
+        Stripe[Stripe Payments]
+        OpenAI[OpenAI API]
+        GoogleCal[Google Calendar]
+        Sentry[Sentry Monitoring]
     end
 
-    subgraph "External Services"
-        Stripe[Stripe<br/>Payment Processing]
-        OpenAI[OpenAI API<br/>AI Personalization]
-        GoogleCal[Google Calendar API<br/>Event Integration]
-        Sentry[Sentry<br/>Error Tracking]
-        VercelAnalytics[Vercel Analytics<br/>Performance]
-    end
-
-    %% User Interactions
-    UI -->|SSR Request| Edge
-    Edge -->|Route| Middleware
-    Middleware -->|Auth Check| Landing
-    Middleware -->|Auth Check| Dashboard
-
-    %% Dashboard Flow
-    Dashboard -->|Fetch Data| SupaAuth
-    Dashboard -->|Query Children| ChildrenTable
-    Dashboard -->|Generate Recs| RecEngine
-    RecEngine -->|Score Prompts| ScoreCalc
-    RecEngine -->|Analyze History| CompletionsTable
-    RecEngine -->|Check Favorites| FavoritesTable
-    RecEngine -->|Return Top 5| Dashboard
-    Dashboard -->|Calculate Stats| Insights
-    Dashboard -->|Generate Tips| TipsGen
-    Dashboard -->|Render| ChildCardGrid
-    ChildCardGrid -->|Display Each| ChildCard
+    %% Main User Flow
+    UI -->|1. Load App| Dashboard
+    Dashboard -->|2. Auth Check| Auth
+    Auth -->|3. Verify JWT| RLS
+    Dashboard -->|4. Fetch Data| ChildrenDB
+    Dashboard -->|5. Generate| RecEngine
+    RecEngine -->|6. Query History| CompletionsDB
+    RecEngine -->|7. Return Top 5| Dashboard
+    Dashboard -->|8. Render| UI
 
     %% Activity Completion Flow
-    ChildCard -->|Start Activity| CC
-    CC -->|Show Modal| ReflectionModal
-    ReflectionModal -->|Submit| CompletionsTable
-    CompletionsTable -->|Trigger| StreakFunc
-    CompletionsTable -->|Update| Dashboard
-
-    %% Child Profile Flow
-    ChildProfile -->|Fetch Child| ChildrenTable
-    ChildProfile -->|Get Insights| Insights
-    Insights -->|Query Stats| CompletionsTable
-    ChildProfile -->|Get Tips| TipsGen
-    ChildProfile -->|Get Recs| RecEngine
-    ChildProfile -->|Display| ConnectionInsights
-    ChildProfile -->|Display| PersonalizedTips
-    ChildProfile -->|Display| ActivityHistory
-
-    %% Authentication Flow
-    Signup -->|Sign Up| SupaAuth
-    SupaAuth -->|Hash Password| ProfilesTable
-    SupaAuth -->|Generate JWT| UI
-    SupaAuth -->|Set Cookie| Edge
+    UI -->|Start Activity| CC
+    CC -->|Submit Notes| CompletionsDB
+    CompletionsDB -->|Update Streak| Dashboard
 
     %% Payment Flow
-    Account -->|Upgrade Click| CheckoutAPI
-    CheckoutAPI -->|Get/Create Customer| ProfilesTable
+    UI -->|Upgrade| CheckoutAPI
     CheckoutAPI -->|Create Session| Stripe
-    Stripe -->|Redirect| UI
-    Stripe -->|Payment Success| WebhookAPI
-    WebhookAPI -->|Verify Signature| Stripe
-    WebhookAPI -->|Update Status| ProfilesTable
+    Stripe -->|Webhook Event| WebhookAPI
+    WebhookAPI -->|Update Status| ProfilesDB
 
-    %% AI Personalization Flow
-    Dashboard -->|Request Custom| PersonalizeAPI
-    PersonalizeAPI -->|Send Prompt| OpenAI
-    OpenAI -->|Return Custom| PersonalizeAPI
-    PersonalizeAPI -->|Display| UI
-
-    %% Calendar Integration Flow
-    Dashboard -->|Connect Cal| CalendarAPI
-    CalendarAPI -->|OAuth Flow| GoogleCal
-    GoogleCal -->|Return Token| TokensTable
-    CalendarAPI -->|Create Event| GoogleCal
-
-    %% Error Tracking
-    Dashboard -->|Capture Errors| Sentry
-    CheckoutAPI -->|Log Issues| Sentry
-    RecEngine -->|Track Performance| Sentry
+    %% Profile Page Flow
+    UI -->|View Profile| ChildProfile
+    ChildProfile -->|Get Stats| Insights
+    Insights -->|Query Data| CompletionsDB
+    ChildProfile -->|Display| UI
 
     %% Security Layer
-    RLS -->|Enforce| ProfilesTable
-    RLS -->|Enforce| ChildrenTable
-    RLS -->|Enforce| CompletionsTable
-    RLS -->|Enforce| FavoritesTable
-    RLS -->|Enforce| TokensTable
+    RLS -.->|Enforce| ProfilesDB
+    RLS -.->|Enforce| ChildrenDB
+    RLS -.->|Enforce| CompletionsDB
 
-    %% Database Relationships
-    ProfilesTable -.->|user_id| ChildrenTable
-    ProfilesTable -.->|user_id| CompletionsTable
-    ChildrenTable -.->|child_id| CompletionsTable
-    PromptsTable -.->|prompt_id| CompletionsTable
-    PromptsTable -.->|prompt_id| FavoritesTable
+    %% External Integrations
+    RecEngine -->|AI Tips| OpenAI
+    Dashboard -->|Track Errors| Sentry
+    Dashboard -->|Sync Events| GoogleCal
 
     style UI fill:#e1f5ff
-    style SC fill:#e1f5ff
-    style CC fill:#e1f5ff
+    style Dashboard fill:#fff3cd
     style RecEngine fill:#fff3cd
-    style ScoreCalc fill:#fff3cd
-    style Insights fill:#fff3cd
-    style TipsGen fill:#fff3cd
-    style SupaAuth fill:#d4edda
+    style Auth fill:#d4edda
     style RLS fill:#d4edda
     style Stripe fill:#f8d7da
     style OpenAI fill:#f8d7da
-    style GoogleCal fill:#f8d7da
-    style Sentry fill:#f8d7da
 ```
 
 ## Key Data Flows
