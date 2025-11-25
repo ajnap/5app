@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import ChildCardGrid from './ChildCardGrid'
 import ReflectionModal from './ReflectionModal'
 import QuickMemoryButton from './QuickMemoryButton'
@@ -65,10 +66,34 @@ export default function DashboardClient({
   const [showConfetti, setShowConfetti] = useState(false)
   const [milestone, setMilestone] = useState<Milestone | null>(null)
   const [milestoneOpen, setMilestoneOpen] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Handle completion from reflection modal
   const handleReflectionComplete = async (notes?: string) => {
-    router.refresh() // Refresh to update streak counter and recommendations
+    setIsRefreshing(true)
+
+    // Show loading toast
+    const loadingToast = toast.loading('Updating your progress...')
+
+    try {
+      // Refresh to update streak counter and recommendations
+      router.refresh()
+
+      // Give time for the refresh to complete
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      toast.success('Activity completed! Keep up the great work! 🎉', {
+        id: loadingToast,
+        duration: 3000,
+      })
+    } catch (error) {
+      toast.error('Failed to update progress. Please try again.', {
+        id: loadingToast,
+        duration: 4000,
+      })
+    } finally {
+      setIsRefreshing(false)
+    }
   }
 
   // Handle starting activity from recommendations
@@ -124,6 +149,7 @@ export default function DashboardClient({
           monthlyActivityCountMap={monthlyActivityCountMap}
           currentStreak={currentStreak}
           onStartActivity={handleStartActivity}
+          isRefreshing={isRefreshing}
         />
 
         {/* Upcoming Events Calendar Widget */}

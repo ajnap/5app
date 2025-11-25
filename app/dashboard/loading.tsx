@@ -1,3 +1,5 @@
+import ChildCardSkeleton from '@/components/ChildCardSkeleton'
+
 export default function DashboardLoading() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -68,7 +70,7 @@ export default function DashboardLoading() {
           {/* Child Cards Grid Skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr mb-8">
             {[1, 2, 3].map((i) => (
-              <SkeletonChildCard key={i} />
+              <ChildCardSkeleton key={i} />
             ))}
           </div>
 
@@ -83,38 +85,6 @@ export default function DashboardLoading() {
           </div>
         </div>
       </main>
-    </div>
-  )
-}
-
-function SkeletonChildCard() {
-  return (
-    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border-2 border-gray-200 shadow-lg p-6 space-y-4 min-h-[300px]">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse mb-2" />
-          <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
-        </div>
-        <div className="h-12 w-20 bg-gray-200 rounded-full animate-pulse" />
-      </div>
-
-      {/* Prompt Section */}
-      <div className="space-y-2">
-        <div className="h-4 w-40 bg-gray-200 rounded animate-pulse" />
-        <div className="h-6 w-full bg-gray-200 rounded animate-pulse" />
-        <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
-        <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse" />
-      </div>
-
-      {/* Buttons */}
-      <div className="flex gap-3 pt-2">
-        <div className="flex-1 h-12 bg-gray-200 rounded-xl animate-pulse" />
-        <div className="h-12 w-12 bg-gray-200 rounded-xl animate-pulse" />
-      </div>
-
-      {/* Click hint */}
-      <div className="h-3 w-48 bg-gray-200 rounded animate-pulse mx-auto" />
     </div>
   )
 }
