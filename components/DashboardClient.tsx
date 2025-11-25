@@ -11,6 +11,7 @@ import ConfettiCelebration from './ConfettiCelebration'
 import MilestoneCelebration, { detectMilestone, type Milestone } from './MilestoneCelebration'
 import EmptyState from './EmptyState'
 import UpcomingEvents from './UpcomingEvents'
+import ErrorBoundary from './ErrorBoundary'
 import type { RecommendationResult, Child } from '@/lib/recommendations/types'
 
 interface Prompt {
@@ -153,7 +154,19 @@ export default function DashboardClient({
         />
 
         {/* Upcoming Events Calendar Widget */}
-        <UpcomingEvents children={children} />
+        <ErrorBoundary
+          fallback={
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 text-center border-2 border-gray-200 shadow-md">
+              <div className="space-y-3">
+                <div className="text-4xl">📅</div>
+                <h4 className="font-bold text-gray-900">Calendar Unavailable</h4>
+                <p className="text-sm text-gray-600">Unable to load upcoming events right now</p>
+              </div>
+            </div>
+          }
+        >
+          <UpcomingEvents children={children} />
+        </ErrorBoundary>
       </div>
 
       {/* Confetti Celebration */}

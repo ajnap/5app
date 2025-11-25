@@ -1,6 +1,7 @@
 'use client'
 
 import ChildCard from './ChildCard'
+import ErrorBoundary from './ErrorBoundary'
 import type { Child, RecommendationResult } from '@/lib/recommendations/types'
 import Link from 'next/link'
 
@@ -72,16 +73,34 @@ export default function ChildCardGrid({
           const monthlyActivityCount = monthlyActivityCountMap[child.id] || 0
 
           return (
-            <ChildCard
+            <ErrorBoundary
               key={child.id}
-              child={child}
-              recommendations={recommendations}
-              onStartActivity={onStartActivity}
-              todayActivityCount={todayActivityCount}
-              weeklyActivityCount={weeklyActivityCount}
-              monthlyActivityCount={monthlyActivityCount}
-              currentStreak={currentStreak}
-            />
+              fallback={
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 text-center border-2 border-gray-200 shadow-lg min-h-[300px] flex items-center justify-center">
+                  <div className="space-y-3">
+                    <div className="text-4xl">⚠️</div>
+                    <h4 className="font-bold text-gray-900">Card Error</h4>
+                    <p className="text-sm text-gray-600">Unable to load {child.name}'s card</p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+                    >
+                      Refresh Page
+                    </button>
+                  </div>
+                </div>
+              }
+            >
+              <ChildCard
+                child={child}
+                recommendations={recommendations}
+                onStartActivity={onStartActivity}
+                todayActivityCount={todayActivityCount}
+                weeklyActivityCount={weeklyActivityCount}
+                monthlyActivityCount={monthlyActivityCount}
+                currentStreak={currentStreak}
+              />
+            </ErrorBoundary>
           )
         })}
 
