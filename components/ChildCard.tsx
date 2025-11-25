@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, memo } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Child, ScoredPrompt } from '@/lib/recommendations/types'
 import { usePromptRefresher } from '@/lib/hooks/usePromptRefresher'
@@ -9,7 +9,10 @@ interface ChildCardProps {
   child: Child
   recommendations: ScoredPrompt[]
   onStartActivity: (promptId: string, childId: string) => void
-  completedToday?: boolean
+  todayActivityCount?: number
+  weeklyActivityCount?: number
+  monthlyActivityCount?: number
+  currentStreak?: number
 }
 
 const CATEGORY_EMOJIS: Record<string, string> = {
@@ -29,13 +32,26 @@ const ChildCard = memo(function ChildCard({
   child,
   recommendations,
   onStartActivity,
-  completedToday = false
+  todayActivityCount = 0,
+  weeklyActivityCount = 0,
+  monthlyActivityCount = 0,
+  currentStreak = 0
 }: ChildCardProps) {
   const router = useRouter()
   const [isStarting, setIsStarting] = useState(false)
+  const [showCelebration, setShowCelebration] = useState(false)
 
   // Use custom hook for prompt cycling
   const { currentPrompt: currentScoredPrompt, refresh, isRefreshing, hasMore } = usePromptRefresher(recommendations)
+
+  // Trigger celebration animation when reaching 3+ activities
+  useEffect(() => {
+    if (todayActivityCount >= 3 && !showCelebration) {
+      setShowCelebration(true)
+      const timer = setTimeout(() => setShowCelebration(false), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [todayActivityCount])
 
   // Get current prompt to display
   const currentPrompt = currentScoredPrompt?.prompt
@@ -59,7 +75,7 @@ const ChildCard = memo(function ChildCard({
   const handleStart = (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent card navigation
 
-    if (!currentPrompt || completedToday) return
+    if (!currentPrompt) return
 
     setIsStarting(true)
     onStartActivity(currentPrompt.id, child.id)
@@ -82,10 +98,18 @@ const ChildCard = memo(function ChildCard({
       role="article"
       aria-label={`${child.name}'s activity card`}
     >
-      {/* Completed Today Badge */}
-      {completedToday && (
-        <div className="absolute top-4 right-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10">
-          ✓ Completed Today!
+      {/* Activity Count Badge */}
+      {todayActivityCount > 0 && (
+        <div
+          className={`absolute top-4 right-4 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md z-10 transition-all ${
+            todayActivityCount >= 3
+              ? 'bg-gradient-to-r from-yellow-400 to-orange-500 animate-pulse'
+              : todayActivityCount >= 2
+              ? 'bg-gradient-to-r from-purple-500 to-pink-500'
+              : 'bg-gradient-to-r from-blue-500 to-indigo-500'
+          }`}
+        >
+          {todayActivityCount >= 3 ? '🌟 ' : ''}{todayActivityCount} {todayActivityCount === 1 ? 'activity' : 'activities'} today!
         </div>
       )}
 
@@ -149,7 +173,7 @@ const ChildCard = memo(function ChildCard({
         <div className="flex gap-3 pt-2">
           <button
             onClick={handleStart}
-            disabled={!currentPrompt || completedToday || isStarting}
+            disabled={!currentPrompt || isStarting}
             className="flex-1 bg-gradient-to-r from-primary-600 via-primary-700 to-purple-600 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:shadow-xl focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             data-testid={`child-card-start-${child.id}`}
             aria-label={currentPrompt ? `Start activity: ${currentPrompt.title}` : 'No activity available'}
@@ -171,7 +195,7 @@ const ChildCard = memo(function ChildCard({
           {hasMore && (
             <button
               onClick={handleRefresh}
-              disabled={isRefreshing || completedToday}
+              disabled={isRefreshing}
               className="px-4 py-3 bg-white text-primary-700 border-2 border-primary-300 rounded-xl font-semibold hover:bg-primary-50 hover:border-primary-400 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Refresh to see another activity idea"
               aria-live="polite"
@@ -198,11 +222,64 @@ const ChildCard = memo(function ChildCard({
           )}
         </div>
 
+        {/* Quick Stats Footer - Always visible */}
+        <div className="mt-4 pt-4 border-t border-gray-200/50">
+          <div className="grid grid-cols-3 gap-2 text-center">
+            {/* Weekly Activities */}
+            <div className="flex flex-col">
+              <span className="text-xs text-gray-500 font-medium">This Week</span>
+              <span className="text-lg font-bold text-primary-600">{weeklyActivityCount}</span>
+              <span className="text-xs text-gray-400">{weeklyActivityCount === 1 ? 'activity' : 'activities'}</span>
+            </div>
+
+            {/* Monthly Activities */}
+            <div className="flex flex-col">
+              <span className="text-xs text-gray-500 font-medium">This Month</span>
+              <span className="text-lg font-bold text-purple-600">{monthlyActivityCount}</span>
+              <span className="text-xs text-gray-400">{monthlyActivityCount === 1 ? 'activity' : 'activities'}</span>
+            </div>
+
+            {/* Current Streak */}
+            <div className="flex flex-col">
+              <span className="text-xs text-gray-500 font-medium">Streak</span>
+              <span className="text-lg font-bold text-orange-600">{currentStreak}</span>
+              <span className="text-xs text-gray-400">{currentStreak === 1 ? 'day' : 'days'}</span>
+            </div>
+          </div>
+        </div>
+
         {/* Click to view details hint */}
         <p className="text-xs text-gray-500 text-center pt-2">
           Click card to view insights and more ideas →
         </p>
       </div>
+
+      {/* Celebration Animation Overlay */}
+      {showCelebration && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
+          {/* Sparkle particles */}
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute animate-ping"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 0.5}s`,
+                animationDuration: '1.5s'
+              }}
+            >
+              <span className="text-2xl">✨</span>
+            </div>
+          ))}
+          {/* Celebration badge */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-bounce">
+            <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white px-6 py-3 rounded-full shadow-2xl text-xl font-bold">
+              🎉 Amazing! 🎉
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 })

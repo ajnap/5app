@@ -32,7 +32,9 @@ interface DashboardClientProps {
   currentStreak?: number
   totalCompletions?: number
   recommendationsMap?: Record<string, RecommendationResult>
-  completedTodayMap?: Record<string, boolean>
+  todayActivityCountMap?: Record<string, number>
+  weeklyActivityCountMap?: Record<string, number>
+  monthlyActivityCountMap?: Record<string, number>
 }
 
 export default function DashboardClient({
@@ -44,7 +46,9 @@ export default function DashboardClient({
   currentStreak = 0,
   totalCompletions = 0,
   recommendationsMap = {},
-  completedTodayMap = {}
+  todayActivityCountMap = {},
+  weeklyActivityCountMap = {},
+  monthlyActivityCountMap = {}
 }: DashboardClientProps) {
   const router = useRouter()
   const supabase = createBrowserClient(
@@ -115,7 +119,10 @@ export default function DashboardClient({
         <ChildCardGrid
           children={children}
           recommendationsMap={recommendationsMap}
-          completedTodayMap={completedTodayMap}
+          todayActivityCountMap={todayActivityCountMap}
+          weeklyActivityCountMap={weeklyActivityCountMap}
+          monthlyActivityCountMap={monthlyActivityCountMap}
+          currentStreak={currentStreak}
           onStartActivity={handleStartActivity}
         />
 

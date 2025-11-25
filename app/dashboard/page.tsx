@@ -9,6 +9,11 @@ import { generateRecommendations } from '@/lib/recommendations/engine'
 import type { RecommendationResult } from '@/lib/recommendations/types'
 import { captureError } from '@/lib/sentry'
 
+// Type for RPC time stats response
+interface TimeStats {
+  total_minutes: number
+}
+
 // Helper function to calculate age from birth_date
 function calculateAge(birthDate: string): number {
   const birth = new Date(birthDate)
@@ -73,29 +78,72 @@ export default async function DashboardPage() {
   const localDateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 
   // Check if user completed TODAY'S specific prompt
-  const { data: completedTodayData } = await supabase
-    .from('prompt_completions')
-    .select('id')
-    .eq('user_id', session.user.id)
-    .eq('prompt_id', todaysPromptId)
-    .eq('completion_date', localDateString)
-    .maybeSingle()
-
-  const completedToday = !!completedTodayData
-
-  // Calculate completedToday map per child
-  const completedTodayMap: Record<string, boolean> = {}
-  for (const child of children) {
-    const { data: childCompletionToday } = await supabase
+  let completedToday = false
+  if (todaysPromptId) {
+    const { data: completedTodayData } = await supabase
       .from('prompt_completions')
       .select('id')
       .eq('user_id', session.user.id)
-      .eq('child_id', child.id)
+      .eq('prompt_id', todaysPromptId)
       .eq('completion_date', localDateString)
       .maybeSingle()
 
-    completedTodayMap[child.id] = !!childCompletionToday
+    completedToday = !!completedTodayData
   }
+
+  // Calculate activity counts and stats per child
+  const todayActivityCountMap: Record<string, number> = {}
+  const weeklyActivityCountMap: Record<string, number> = {}
+  const monthlyActivityCountMap: Record<string, number> = {}
+
+  // Calculate date ranges
+  const sevenDaysAgo = new Date(today)
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6) // Include today + last 6 days = 7 days total
+  const sevenDaysAgoString = `${sevenDaysAgo.getFullYear()}-${String(sevenDaysAgo.getMonth() + 1).padStart(2, '0')}-${String(sevenDaysAgo.getDate()).padStart(2, '0')}`
+
+  const thirtyDaysAgo = new Date(today)
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29) // Include today + last 29 days = 30 days total
+  const thirtyDaysAgoString = `${thirtyDaysAgo.getFullYear()}-${String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0')}-${String(thirtyDaysAgo.getDate()).padStart(2, '0')}`
+
+  // Fetch all child stats in parallel
+  await Promise.all(
+    children.map(async (child) => {
+      // Fetch all three counts in parallel per child
+      const [
+        { count: todayCount },
+        { count: weeklyCount },
+        { count: monthlyCount }
+      ] = await Promise.all([
+        // Today's count
+        supabase
+          .from('prompt_completions')
+          .select('id', { count: 'exact', head: false })
+          .eq('user_id', session.user.id)
+          .eq('child_id', child.id)
+          .eq('completion_date', localDateString),
+
+        // Weekly count (last 7 days including today)
+        supabase
+          .from('prompt_completions')
+          .select('id', { count: 'exact', head: false })
+          .eq('user_id', session.user.id)
+          .eq('child_id', child.id)
+          .gte('completion_date', sevenDaysAgoString),
+
+        // Monthly count (last 30 days including today)
+        supabase
+          .from('prompt_completions')
+          .select('id', { count: 'exact', head: false })
+          .eq('user_id', session.user.id)
+          .eq('child_id', child.id)
+          .gte('completion_date', thirtyDaysAgoString)
+      ])
+
+      todayActivityCountMap[child.id] = todayCount || 0
+      weeklyActivityCountMap[child.id] = weeklyCount || 0
+      monthlyActivityCountMap[child.id] = monthlyCount || 0
+    })
+  )
 
   // Get current streak
   const { data: streakData } = await supabase
@@ -109,58 +157,60 @@ export default async function DashboardPage() {
 
   const totalCompletions = totalData || 0
 
-  // Get time statistics
-  const { data: timeStatsWeek } = await supabase
-    .rpc('get_time_stats', { p_user_id: session.user.id, p_period: 'week' })
-    .single()
+  // Get time statistics (in parallel)
+  const [
+    { data: timeStatsWeek },
+    { data: timeStatsMonth }
+  ] = await Promise.all([
+    supabase.rpc('get_time_stats', { p_user_id: session.user.id, p_period: 'week' }).single(),
+    supabase.rpc('get_time_stats', { p_user_id: session.user.id, p_period: 'month' }).single()
+  ])
 
-  const { data: timeStatsMonth } = await supabase
-    .rpc('get_time_stats', { p_user_id: session.user.id, p_period: 'month' })
-    .single()
+  const weeklyMinutes = (timeStatsWeek as TimeStats | null)?.total_minutes || 0
+  const monthlyMinutes = (timeStatsMonth as TimeStats | null)?.total_minutes || 0
 
-  const weeklyMinutes = (timeStatsWeek as any)?.total_minutes || 0
-  const monthlyMinutes = (timeStatsMonth as any)?.total_minutes || 0
-
-  // Generate recommendations for each child
+  // Generate recommendations for each child (in parallel)
   const recommendationsMap: Record<string, RecommendationResult> = {}
 
-  for (const child of children) {
-    try {
-      const recommendations = await generateRecommendations(
-        {
-          userId: session.user.id,
+  await Promise.all(
+    children.map(async (child) => {
+      try {
+        const recommendations = await generateRecommendations(
+          {
+            userId: session.user.id,
+            childId: child.id,
+            faithMode,
+            limit: 5
+          },
+          supabase
+        )
+        recommendationsMap[child.id] = recommendations
+      } catch (error) {
+        captureError(error, {
+          tags: {
+            component: 'dashboard',
+            operation: 'generate-recommendations'
+          },
+          extra: {
+            childId: child.id,
+            childName: child.name,
+            userId: session.user.id
+          }
+        })
+        // Fallback: empty recommendations
+        recommendationsMap[child.id] = {
           childId: child.id,
-          faithMode,
-          limit: 5
-        },
-        supabase
-      )
-      recommendationsMap[child.id] = recommendations
-    } catch (error) {
-      captureError(error, {
-        tags: {
-          component: 'dashboard',
-          operation: 'generate-recommendations'
-        },
-        extra: {
-          childId: child.id,
-          childName: child.name,
-          userId: session.user.id
-        }
-      })
-      // Fallback: empty recommendations
-      recommendationsMap[child.id] = {
-        childId: child.id,
-        recommendations: [],
-        metadata: {
-          totalCompletions: 0,
-          categoryDistribution: {},
-          timestamp: new Date().toISOString(),
-          cacheKey: ''
+          recommendations: [],
+          metadata: {
+            totalCompletions: 0,
+            categoryDistribution: {},
+            timestamp: new Date().toISOString(),
+            cacheKey: ''
+          }
         }
       }
-    }
-  }
+    })
+  )
 
 
   // Log each child's recommendation count
@@ -301,7 +351,9 @@ export default async function DashboardPage() {
             currentStreak={currentStreak}
             totalCompletions={totalCompletions}
             recommendationsMap={recommendationsMap}
-            completedTodayMap={completedTodayMap}
+            todayActivityCountMap={todayActivityCountMap}
+            weeklyActivityCountMap={weeklyActivityCountMap}
+            monthlyActivityCountMap={monthlyActivityCountMap}
           />
         </div>
       </main>

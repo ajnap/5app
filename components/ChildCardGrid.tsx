@@ -7,14 +7,20 @@ import Link from 'next/link'
 interface ChildCardGridProps {
   children: Child[]
   recommendationsMap: Record<string, RecommendationResult>
-  completedTodayMap: Record<string, boolean>
+  todayActivityCountMap: Record<string, number>
+  weeklyActivityCountMap: Record<string, number>
+  monthlyActivityCountMap: Record<string, number>
+  currentStreak: number
   onStartActivity: (promptId: string, childId: string) => void
 }
 
 export default function ChildCardGrid({
   children,
   recommendationsMap,
-  completedTodayMap,
+  todayActivityCountMap,
+  weeklyActivityCountMap,
+  monthlyActivityCountMap,
+  currentStreak,
   onStartActivity
 }: ChildCardGridProps) {
   // Empty state - no children
@@ -46,7 +52,9 @@ export default function ChildCardGrid({
       >
         {children.map((child) => {
           const recommendations = recommendationsMap[child.id]?.recommendations || []
-          const completedToday = completedTodayMap[child.id] || false
+          const todayActivityCount = todayActivityCountMap[child.id] || 0
+          const weeklyActivityCount = weeklyActivityCountMap[child.id] || 0
+          const monthlyActivityCount = monthlyActivityCountMap[child.id] || 0
 
           return (
             <ChildCard
@@ -54,7 +62,10 @@ export default function ChildCardGrid({
               child={child}
               recommendations={recommendations}
               onStartActivity={onStartActivity}
-              completedToday={completedToday}
+              todayActivityCount={todayActivityCount}
+              weeklyActivityCount={weeklyActivityCount}
+              monthlyActivityCount={monthlyActivityCount}
+              currentStreak={currentStreak}
             />
           )
         })}
