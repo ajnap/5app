@@ -112,6 +112,7 @@ export default async function ChildProfilePage({
   }
 
   // Fetch completions for tips generation and history
+  // Note: Select both reflection_note (new) and notes (legacy) for backward compatibility
   const { data: completionsData } = await supabase
     .from('prompt_completions')
     .select(`
@@ -127,6 +128,17 @@ export default async function ChildProfilePage({
     ...c,
     prompt: c.prompt || undefined
   }))
+
+  // Debug: Log completions to check reflection_note and notes data
+  console.log('[Profile Page] Fetched completions:', completions.map((c: any) => ({
+    id: c.id,
+    prompt_title: c.prompt?.title,
+    has_reflection_note: !!c.reflection_note,
+    has_notes: !!c.notes,
+    reflection_note_preview: c.reflection_note?.substring(0, 50),
+    notes_preview: c.notes?.substring(0, 50),
+    final_text: c.reflection_note || c.notes
+  })))
 
   // Generate personalized tips
   let tips: PersonalizedTip[]

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import ConnectionInsights from './ConnectionInsights'
 import PersonalizedTips from './PersonalizedTips'
 import ActivityHistory from './ActivityHistory'
+import MemoryTimeline from './MemoryTimeline'
 import ReflectionModal from './ReflectionModal'
 import ConfettiCelebration from './ConfettiCelebration'
 import MilestoneCelebration, { detectMilestone, type Milestone } from './MilestoneCelebration'
@@ -237,6 +238,9 @@ export default function ChildDetailClient({
 
         {/* Activity History */}
         <ActivityHistory completions={completions} childName={child.name} />
+
+        {/* Memory Timeline */}
+        <MemoryTimeline childId={child.id} childName={child.name} userId={userId} />
       </div>
 
       {/* Confetti Celebration */}

@@ -38,6 +38,17 @@ export default function ActivityHistory({
 }: ActivityHistoryProps) {
   const recentCompletions = completions.slice(0, limit)
 
+  // Debug: Log completions to check both reflection_note and notes
+  console.log('[ActivityHistory] Completions:', completions.map((c: any) => ({
+    id: c.id,
+    prompt_title: c.prompt?.title,
+    has_reflection_note: !!c.reflection_note,
+    has_notes: !!c.notes,
+    reflection_note: c.reflection_note,
+    notes: c.notes,
+    final_text: c.reflection_note || c.notes
+  })))
+
   if (recentCompletions.length === 0) {
     return (
       <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-lg p-6">
@@ -72,7 +83,9 @@ export default function ActivityHistory({
           const categoryEmoji = prompt
             ? CATEGORY_EMOJIS[prompt.category] || '⭐'
             : '⭐'
-          const hasReflection = !!completion.reflection_note
+          // Check both reflection_note (new) and notes (legacy)
+          const reflectionText = completion.reflection_note || (completion as any).notes
+          const hasReflection = !!reflectionText
           const timeAgo = formatDistanceToNow(new Date(completion.completed_at), {
             addSuffix: true
           })
@@ -111,10 +124,10 @@ export default function ActivityHistory({
                 </div>
 
                 {/* Reflection Note */}
-                {completion.reflection_note && (
+                {reflectionText && (
                   <div className="mt-3 pt-3 border-t border-gray-200">
                     <p className="text-sm text-gray-700 italic">
-                      "{completion.reflection_note}"
+                      "{reflectionText}"
                     </p>
                   </div>
                 )}
