@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@auth/supabase-adapter": "^1.11.1",
+    "@heroicons/react": "^2.2.0",
     "@sentry/nextjs": "^10.22.0",
     "@stripe/stripe-js": "^2.4.0",
     "@supabase/ssr": "^0.7.0",
