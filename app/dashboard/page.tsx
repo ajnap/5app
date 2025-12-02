@@ -240,6 +240,12 @@ export default async function DashboardPage() {
               ✨ Assistant
             </Link>
             <Link
+              href="/spouse"
+              className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-200 px-3 py-1.5 rounded-lg hover:bg-white/60"
+            >
+              💑 Spouse
+            </Link>
+            <Link
               href="/children"
               className="text-gray-700 hover:text-primary-600 font-medium transition-all duration-200 px-3 py-1.5 rounded-lg hover:bg-white/60"
             >
