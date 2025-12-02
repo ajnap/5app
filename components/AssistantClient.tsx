@@ -123,15 +123,25 @@ export default function AssistantClient({ userId, childNames }: AssistantClientP
     <div className="flex flex-col h-screen">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-4 sm:px-6">
-        <div className="max-w-4xl mx-auto flex items-center gap-3">
-          <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <SparklesIcon className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Parenting Assistant</h1>
-            <p className="text-sm text-gray-600">
-              Ask me anything about {childNames}
-            </p>
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <SparklesIcon className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Parenting Assistant</h1>
+                <p className="text-sm text-gray-600">
+                  Ask me anything about {childNames}
+                </p>
+              </div>
+            </div>
+            <a
+              href="/dashboard"
+              className="text-sm text-gray-600 hover:text-primary-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-gray-100"
+            >
+              ← Back to Dashboard
+            </a>
           </div>
         </div>
       </div>
