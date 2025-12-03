@@ -25,9 +25,9 @@ describe('insights-calculator', () => {
     it('should calculate insights with complete data', async () => {
       // Mock RPC calls for time stats
       mockSupabase.rpc
-        .mockResolvedValueOnce({ data: { total_minutes: 45 }, error: null }) // weekly
-        .mockResolvedValueOnce({ data: { total_minutes: 180 }, error: null }) // monthly
-        .mockResolvedValueOnce({ data: 5, error: null }) // streak
+        .mockResolvedValueOnce({ data: { total_minutes: 45 }, error: null, count: null, status: 200, statusText: 'OK' }) // weekly
+        .mockResolvedValueOnce({ data: { total_minutes: 180 }, error: null, count: null, status: 200, statusText: 'OK' }) // monthly
+        .mockResolvedValueOnce({ data: 5, error: null, count: null, status: 200, statusText: 'OK' }) // streak
 
       // Mock completions query
       const mockCompletions = [
@@ -94,9 +94,9 @@ describe('insights-calculator', () => {
 
     it('should handle empty completion history', async () => {
       mockSupabase.rpc
-        .mockResolvedValueOnce({ data: { total_minutes: 0 }, error: null })
-        .mockResolvedValueOnce({ data: { total_minutes: 0 }, error: null })
-        .mockResolvedValueOnce({ data: 0, error: null })
+        .mockResolvedValueOnce({ data: { total_minutes: 0 }, error: null, count: null, status: 200, statusText: 'OK' })
+        .mockResolvedValueOnce({ data: { total_minutes: 0 }, error: null, count: null, status: 200, statusText: 'OK' })
+        .mockResolvedValueOnce({ data: 0, error: null, count: null, status: 200, statusText: 'OK' })
 
       mockSupabase.from = jest.fn().mockReturnValue({
         select: jest.fn().mockReturnValue({
@@ -138,9 +138,9 @@ describe('insights-calculator', () => {
 
     it('should calculate category distribution percentages correctly', async () => {
       mockSupabase.rpc
-        .mockResolvedValueOnce({ data: { total_minutes: 30 }, error: null })
-        .mockResolvedValueOnce({ data: { total_minutes: 120 }, error: null })
-        .mockResolvedValueOnce({ data: 3, error: null })
+        .mockResolvedValueOnce({ data: { total_minutes: 30 }, error: null, count: null, status: 200, statusText: 'OK' })
+        .mockResolvedValueOnce({ data: { total_minutes: 120 }, error: null, count: null, status: 200, statusText: 'OK' })
+        .mockResolvedValueOnce({ data: 3, error: null, count: null, status: 200, statusText: 'OK' })
 
       const mockCompletions = [
         { id: '1', completion_date: '2025-11-14', category: { category: 'connection' } },
