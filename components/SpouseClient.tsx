@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { HeartIcon, SparklesIcon, ChatBubbleLeftRightIcon, CalendarIcon, ChartBarIcon } from '@heroicons/react/24/solid'
+import { toast } from 'sonner'
+import { createBrowserClient } from '@supabase/ssr'
 
 interface SpouseProfile {
   id: string
@@ -81,9 +83,95 @@ export default function SpouseClient({
 }: SpouseClientProps) {
   const [showLoveLanguages, setShowLoveLanguages] = useState(false)
   const [showDateIdeas, setShowDateIdeas] = useState(false)
+  const [currentPrompt, setCurrentPrompt] = useState(todayPrompt)
+  const [selectedLoveLanguage, setSelectedLoveLanguage] = useState(spouseProfile?.love_language || 'quality_time')
+  const [isLoading, setIsLoading] = useState(false)
 
-  const loveLanguage = spouseProfile?.love_language || 'quality_time'
+  const loveLanguage = selectedLoveLanguage
   const loveLanguageInfo = LOVE_LANGUAGES[loveLanguage as keyof typeof LOVE_LANGUAGES]
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
+  // Handler: Get another conversation prompt
+  const handleGetAnotherQuestion = async () => {
+    setIsLoading(true)
+    try {
+      // Mark current prompt as used
+      if (currentPrompt) {
+        await supabase
+          .from('used_conversation_prompts')
+          .insert({
+            user_id: userId,
+            prompt_id: currentPrompt.id,
+            helpful_rating: null,
+          })
+      }
+
+      // Fetch a new random prompt
+      const { data: prompts } = await supabase
+        .from('conversation_prompts')
+        .select('*')
+        .in('category', ['daily', 'fun', 'deep'])
+        .limit(20)
+
+      if (prompts && prompts.length > 0) {
+        const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)]
+        setCurrentPrompt(randomPrompt)
+        toast.success('Here\'s a new question for you!')
+      }
+    } catch (error) {
+      toast.error('Failed to load new question')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Handler: Log a love language action
+  const handleLogAction = async (action: string) => {
+    try {
+      await supabase
+        .from('connection_activities')
+        .insert({
+          user_id: userId,
+          activity_type: 'love_language_action',
+          title: action,
+          mood_rating: null,
+          duration_minutes: null,
+        })
+
+      toast.success(`Great! "${action}" logged ❤️`)
+    } catch (error) {
+      toast.error('Failed to log action')
+    }
+  }
+
+  // Handler: Save love language preference
+  const handleSaveLoveLanguage = async (newLanguage: string) => {
+    setIsLoading(true)
+    try {
+      await supabase
+        .from('spouse_profiles')
+        .update({ love_language: newLanguage })
+        .eq('user_id', userId)
+
+      setSelectedLoveLanguage(newLanguage)
+      setShowLoveLanguages(false)
+      toast.success('Love language updated!')
+    } catch (error) {
+      toast.error('Failed to update love language')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Handler: Quick check-in
+  const handleQuickCheckIn = () => {
+    // For now, just show a toast - can be expanded to a modal later
+    toast.success('Check-in feature coming soon! Track your connection rating over time.')
+  }
 
   return (
     <div className="min-h-screen">
@@ -129,9 +217,7 @@ export default function SpouseClient({
                 </div>
               </div>
               <button
-                onClick={() => {
-                  /* TODO: Open check-in modal */
-                }}
+                onClick={handleQuickCheckIn}
                 className="px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
               >
                 Quick Check-In
@@ -143,18 +229,18 @@ export default function SpouseClient({
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Today's Conversation Prompt */}
-          {todayPrompt && (
+          {currentPrompt && (
             <div className="bg-gradient-to-br from-pink-50 via-rose-50 to-white rounded-2xl border-2 border-pink-300 shadow-xl p-6">
               <div className="flex items-center gap-2 mb-4">
                 <ChatBubbleLeftRightIcon className="w-6 h-6 text-pink-600" />
                 <h2 className="text-xl font-bold text-gray-900">Today's Question</h2>
               </div>
-              <p className="text-lg text-gray-800 mb-4 font-medium">{todayPrompt.question}</p>
-              {todayPrompt.follow_up_questions && todayPrompt.follow_up_questions.length > 0 && (
+              <p className="text-lg text-gray-800 mb-4 font-medium">{currentPrompt.question}</p>
+              {currentPrompt.follow_up_questions && currentPrompt.follow_up_questions.length > 0 && (
                 <div className="bg-white rounded-xl p-4 border border-pink-200">
                   <p className="text-sm font-semibold text-pink-700 mb-2">Follow-up prompts:</p>
                   <ul className="space-y-1">
-                    {todayPrompt.follow_up_questions.map((question, idx) => (
+                    {currentPrompt.follow_up_questions.map((question, idx) => (
                       <li key={idx} className="text-sm text-gray-700">
                         • {question}
                       </li>
@@ -163,12 +249,11 @@ export default function SpouseClient({
                 </div>
               )}
               <button
-                onClick={() => {
-                  /* TODO: Mark as used & show new prompt */
-                }}
-                className="mt-4 w-full px-4 py-2 bg-white border-2 border-pink-300 text-pink-700 rounded-xl font-semibold hover:bg-pink-50 transition-all"
+                onClick={handleGetAnotherQuestion}
+                disabled={isLoading}
+                className="mt-4 w-full px-4 py-2 bg-white border-2 border-pink-300 text-pink-700 rounded-xl font-semibold hover:bg-pink-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Get Another Question
+                {isLoading ? 'Loading...' : 'Get Another Question'}
               </button>
             </div>
           )}
@@ -192,9 +277,7 @@ export default function SpouseClient({
               {loveLanguageInfo.actions.map((action, idx) => (
                 <button
                   key={idx}
-                  onClick={() => {
-                    /* TODO: Log action */
-                  }}
+                  onClick={() => handleLogAction(action)}
                   className="w-full text-left px-4 py-3 bg-white border border-purple-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-all group"
                 >
                   <span className="text-sm font-medium text-gray-700 group-hover:text-purple-900">
@@ -203,6 +286,30 @@ export default function SpouseClient({
                 </button>
               ))}
             </div>
+
+            {/* Love Language Selector Modal */}
+            {showLoveLanguages && (
+              <div className="mt-4 bg-white rounded-xl p-4 border-2 border-purple-300 shadow-lg">
+                <p className="text-sm font-semibold text-gray-700 mb-3">Select your love language:</p>
+                <div className="space-y-2">
+                  {Object.entries(LOVE_LANGUAGES).map(([key, lang]) => (
+                    <button
+                      key={key}
+                      onClick={() => handleSaveLoveLanguage(key)}
+                      disabled={isLoading}
+                      className={`w-full text-left px-3 py-2 rounded-lg border transition-all ${
+                        selectedLoveLanguage === key
+                          ? 'bg-purple-100 border-purple-400 font-semibold'
+                          : 'bg-white border-gray-200 hover:bg-purple-50'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      <span className="mr-2">{lang.emoji}</span>
+                      <span className="text-sm">{lang.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
