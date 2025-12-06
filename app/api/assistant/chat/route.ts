@@ -3,11 +3,17 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
-
 export const runtime = 'edge'
+
+// Lazy initialize OpenAI client to avoid build-time errors
+function getOpenAIClient() {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY environment variable is not set')
+  }
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  })
+}
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
@@ -160,6 +166,7 @@ Keep responses concise (2-3 paragraphs max), actionable, and focused on quick co
     })
 
     // Call OpenAI with streaming
+    const openai = getOpenAIClient()
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini', // Cost-effective model
       messages,
