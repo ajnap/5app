@@ -8,9 +8,15 @@ export default function AddChildButton() {
   return (
     <button
       onClick={() => router.push('/children/new')}
-      className="inline-flex items-center gap-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+      className="btn-primary-lg group"
     >
-      <span className="text-2xl">+</span>
+      <svg
+        className="w-5 h-5 transition-transform group-hover:rotate-90"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+      </svg>
       Add Child
     </button>
   )
