@@ -28,6 +28,14 @@ function calculateAge(birthDate: string): number {
   return age
 }
 
+// Get greeting based on time of day
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
 export default async function DashboardPage() {
   const supabase = await createServerClient()
 
@@ -41,12 +49,13 @@ export default async function DashboardPage() {
   // Get user's subscription status and faith mode
   const { data: profile } = await supabase
     .from('profiles')
-    .select('subscription_status, subscription_tier, faith_mode')
+    .select('subscription_status, subscription_tier, faith_mode, full_name')
     .eq('id', session.user.id)
     .single()
 
   const isPremium = profile?.subscription_status === SUBSCRIPTION_STATUS.ACTIVE
   const faithMode = profile?.faith_mode || false
+  const userName = profile?.full_name || session.user.email?.split('@')[0] || 'Parent'
 
   // Fetch user's children
   const { data: childrenData } = await supabase
@@ -169,6 +178,21 @@ export default async function DashboardPage() {
   const weeklyMinutes = (timeStatsWeek as TimeStats | null)?.total_minutes || 0
   const monthlyMinutes = (timeStatsMonth as TimeStats | null)?.total_minutes || 0
 
+  // Get recent completions for activity feed
+  const { data: recentCompletions } = await supabase
+    .from('prompt_completions')
+    .select(`
+      id,
+      completion_date,
+      completed_at,
+      duration_seconds,
+      child:child_profiles(name),
+      prompt:daily_prompts(title, category)
+    `)
+    .eq('user_id', session.user.id)
+    .order('completed_at', { ascending: false })
+    .limit(10)
+
   // Generate recommendations for each child (in parallel)
   const recommendationsMap: Record<string, RecommendationResult> = {}
 
@@ -213,148 +237,270 @@ export default async function DashboardPage() {
   )
 
   return (
-    <div className="min-h-screen bg-cream-100">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-cream-100/80 backdrop-blur-lg border-b border-cream-200">
-        <div className="container-wide py-4">
-          <div className="flex justify-between items-center">
-            <Link href="/" className="flex items-center gap-2 group">
-              <span className="text-xl transition-transform group-hover:scale-110">❤️</span>
-              <span className="font-display text-lg font-semibold text-lavender-600 hidden sm:block">
-                The Next 5 Minutes
+    <div className="min-h-screen bg-cream-50">
+      <div className="flex">
+        {/* Left Sidebar */}
+        <aside className="hidden lg:flex flex-col w-64 min-h-screen bg-white border-r border-cream-200 p-6">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 mb-8 group">
+            <span className="text-2xl transition-transform group-hover:scale-110">❤️</span>
+            <span className="font-display text-lg font-semibold text-lavender-600">
+              Next 5 Min
+            </span>
+          </Link>
+
+          {/* User Profile */}
+          <div className="flex flex-col items-center text-center mb-8 pb-6 border-b border-cream-200">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-lavender-400 to-lavender-600 flex items-center justify-center text-white text-3xl font-display font-bold mb-3 shadow-lg">
+              {userName.charAt(0).toUpperCase()}
+            </div>
+            {currentStreak > 0 && (
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-peach-600 bg-peach-100 px-2 py-1 rounded-full mb-2">
+                🔥 {currentStreak} day streak
               </span>
+            )}
+            <h3 className="font-display font-semibold text-slate-900">{userName}</h3>
+            <p className="text-sm text-slate-500">{session.user.email}</p>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 space-y-1">
+            <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-lavender-50 text-lavender-700 font-medium">
+              <span className="text-lg">🏠</span>
+              Dashboard
             </Link>
+            <Link href="/children" className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-cream-100 transition-colors">
+              <span className="text-lg">👶</span>
+              Children
+            </Link>
+            <Link href="/favorites" className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-cream-100 transition-colors">
+              <span className="text-lg">❤️</span>
+              Favorites
+            </Link>
+            <Link href="/spouse" className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-cream-100 transition-colors">
+              <span className="text-lg">💑</span>
+              Spouse
+            </Link>
+            <Link href="/assistant" className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-cream-100 transition-colors">
+              <span className="text-lg">✨</span>
+              AI Assistant
+            </Link>
+            <Link href={ROUTES.ACCOUNT} className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-cream-100 transition-colors">
+              <span className="text-lg">⚙️</span>
+              Settings
+            </Link>
+          </nav>
 
-            <div className="flex items-center gap-2">
-              <Link href="/favorites" className="nav-link" title="Favorites">
-                <span className="text-lg">❤️</span>
-                <span className="hidden md:inline">Favorites</span>
-              </Link>
-              <Link href="/assistant" className="nav-link">
-                <span className="text-lg">✨</span>
-                <span className="hidden md:inline">Assistant</span>
-              </Link>
-              <Link href="/spouse" className="nav-link">
-                <span className="text-lg">💑</span>
-                <span className="hidden md:inline">Spouse</span>
-              </Link>
-              <Link href="/children" className="nav-link">
-                <span className="text-lg">👶</span>
-                <span className="hidden md:inline">Children</span>
-              </Link>
-              <Link href={ROUTES.ACCOUNT} className="nav-link">
-                <span className="text-lg">⚙️</span>
-                <span className="hidden md:inline">Account</span>
-              </Link>
-              <SignOutButton />
-            </div>
+          {/* Sign Out */}
+          <div className="pt-4 border-t border-cream-200">
+            <SignOutButton />
           </div>
-        </div>
-      </nav>
+        </aside>
 
-      {/* Main Content */}
-      <main className="container-narrow py-8">
-        {/* Subscription Status Banner */}
-        {!isPremium && (
-          <div className="card-elevated bg-gradient-to-r from-peach-50 via-peach-100 to-peach-50 border-2 border-peach-200 mb-8 fade-in-up">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div className="flex items-start gap-3">
-                <span className="text-3xl">✨</span>
-                <div>
-                  <p className="font-display text-lg font-semibold text-slate-900">Unlock Full Access</p>
-                  <p className="text-slate-600 text-sm">Upgrade to premium for unlimited prompts and advanced features</p>
-                </div>
-              </div>
-              <Link href={ROUTES.ACCOUNT} className="btn-primary whitespace-nowrap pulse-glow">
-                Upgrade Now
+        {/* Main Content */}
+        <main className="flex-1 min-h-screen">
+          {/* Mobile Header */}
+          <header className="lg:hidden sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-cream-200 px-4 py-3">
+            <div className="flex justify-between items-center">
+              <Link href="/" className="flex items-center gap-2">
+                <span className="text-xl">❤️</span>
+                <span className="font-display font-semibold text-lavender-600">Next 5 Min</span>
               </Link>
-            </div>
-          </div>
-        )}
-
-        {/* Today's Date Card */}
-        <div className="text-center mb-10 fade-in-up">
-          <div className="inline-flex flex-col items-center bg-white rounded-3xl px-10 py-6 shadow-soft border border-cream-200">
-            <p className="text-lavender-500 text-xs uppercase tracking-widest font-bold mb-1">Today</p>
-            <p className="font-display text-2xl md:text-3xl font-semibold text-slate-900">
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </p>
-          </div>
-        </div>
-
-        {/* Progress Stats */}
-        {(currentStreak > 0 || totalCompletions > 0) && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10 fade-in-up delay-100">
-            {/* Streak Card */}
-            <div className="card-elevated group hover:border-peach-200">
-              <div className="flex items-center gap-4">
-                <div className="text-4xl transition-transform group-hover:scale-110">
-                  {currentStreak > 0 ? '🔥' : '🌱'}
-                </div>
-                <div>
-                  {currentStreak > 0 ? (
-                    <>
-                      <p className="font-display text-3xl font-bold text-slate-900">{currentStreak}</p>
-                      <p className="text-slate-500 text-sm font-medium">Day Streak</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="font-display text-lg font-semibold text-slate-900">Start Today!</p>
-                      <p className="text-slate-500 text-sm">Complete an activity</p>
-                    </>
-                  )}
-                </div>
+              <div className="flex items-center gap-2">
+                <Link href="/children" className="p-2 text-slate-600 hover:text-lavender-600">
+                  <span className="text-lg">👶</span>
+                </Link>
+                <Link href={ROUTES.ACCOUNT} className="p-2 text-slate-600 hover:text-lavender-600">
+                  <span className="text-lg">⚙️</span>
+                </Link>
               </div>
             </div>
+          </header>
 
-            {/* Total Completions Card */}
-            <div className="card-elevated group hover:border-sage-200">
-              <div className="flex items-center gap-4">
-                <div className="text-4xl transition-transform group-hover:scale-110">✅</div>
-                <div>
-                  <p className="font-display text-3xl font-bold text-slate-900">{totalCompletions}</p>
-                  <p className="text-slate-500 text-sm font-medium">Activities Done</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Time Stats Card */}
-            {(weeklyMinutes > 0 || monthlyMinutes > 0) && (
-              <div className="card-elevated group hover:border-lavender-200">
-                <div className="flex items-center gap-4">
-                  <div className="text-4xl transition-transform group-hover:scale-110">⏱️</div>
+          <div className="flex">
+            {/* Center Content */}
+            <div className="flex-1 p-6 lg:p-8 max-w-4xl">
+              {/* Greeting Header */}
+              <div className="mb-8 fade-in">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
-                    <p className="font-display text-3xl font-bold text-slate-900">{weeklyMinutes}</p>
-                    <p className="text-slate-500 text-sm font-medium">Min This Week</p>
-                    {monthlyMinutes > 0 && (
-                      <p className="text-xs text-slate-400">{monthlyMinutes} min this month</p>
-                    )}
+                    <h1 className="font-display text-2xl md:text-3xl font-bold text-slate-900">
+                      {getGreeting()}, {userName.split(' ')[0]}
+                    </h1>
+                    <p className="text-slate-500 mt-1">
+                      Today is {new Date().toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                  <Link href="/children/new" className="btn-primary whitespace-nowrap">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Child
+                  </Link>
+                </div>
+              </div>
+
+              {/* Upgrade Banner (if not premium) */}
+              {!isPremium && (
+                <div className="mb-8 bg-gradient-to-r from-peach-100 to-peach-50 rounded-2xl p-5 border border-peach-200 fade-in-up">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">✨</span>
+                      <div>
+                        <p className="font-semibold text-slate-900">Unlock Premium Features</p>
+                        <p className="text-sm text-slate-600">Get unlimited activities and AI assistant</p>
+                      </div>
+                    </div>
+                    <Link href={ROUTES.ACCOUNT} className="btn-primary text-sm px-4 py-2">
+                      Upgrade
+                    </Link>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
 
-        {/* Child Selector and Filtered Prompts */}
-        <DashboardClient
-          children={children}
-          prompts={prompts}
-          completedToday={completedToday}
-          faithMode={faithMode}
-          userId={session.user.id}
-          currentStreak={currentStreak}
-          totalCompletions={totalCompletions}
-          recommendationsMap={recommendationsMap}
-          todayActivityCountMap={todayActivityCountMap}
-          weeklyActivityCountMap={weeklyActivityCountMap}
-          monthlyActivityCountMap={monthlyActivityCountMap}
-        />
-      </main>
+              {/* Stats Cards */}
+              {(totalCompletions > 0 || weeklyMinutes > 0) && (
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8 fade-in-up delay-100">
+                  <div className="bg-white rounded-2xl p-5 border border-cream-200 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-sage-100 flex items-center justify-center text-2xl">
+                        ✅
+                      </div>
+                      <div>
+                        <p className="font-display text-2xl font-bold text-slate-900">{totalCompletions}</p>
+                        <p className="text-sm text-slate-500">Activities</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {weeklyMinutes > 0 && (
+                    <div className="bg-white rounded-2xl p-5 border border-cream-200 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-lavender-100 flex items-center justify-center text-2xl">
+                          ⏱️
+                        </div>
+                        <div>
+                          <p className="font-display text-2xl font-bold text-slate-900">{weeklyMinutes}</p>
+                          <p className="text-sm text-slate-500">Min this week</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentStreak > 0 && (
+                    <div className="bg-white rounded-2xl p-5 border border-cream-200 shadow-sm col-span-2 lg:col-span-1">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-peach-100 flex items-center justify-center text-2xl">
+                          🔥
+                        </div>
+                        <div>
+                          <p className="font-display text-2xl font-bold text-slate-900">{currentStreak}</p>
+                          <p className="text-sm text-slate-500">Day streak</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Child Cards and Activities */}
+              <DashboardClient
+                children={children}
+                prompts={prompts}
+                completedToday={completedToday}
+                faithMode={faithMode}
+                userId={session.user.id}
+                currentStreak={currentStreak}
+                totalCompletions={totalCompletions}
+                recommendationsMap={recommendationsMap}
+                todayActivityCountMap={todayActivityCountMap}
+                weeklyActivityCountMap={weeklyActivityCountMap}
+                monthlyActivityCountMap={monthlyActivityCountMap}
+              />
+            </div>
+
+            {/* Right Sidebar - Activity Feed */}
+            <aside className="hidden xl:block w-80 border-l border-cream-200 bg-white p-6 min-h-screen">
+              <div className="sticky top-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="font-display text-lg font-semibold text-slate-900">Recent Activity</h2>
+                  <span className="text-xl">📅</span>
+                </div>
+
+                {/* Activity Timeline */}
+                {recentCompletions && recentCompletions.length > 0 ? (
+                  <div className="space-y-1">
+                    {/* Group by date */}
+                    {(() => {
+                      const grouped: Record<string, typeof recentCompletions> = {}
+                      recentCompletions.forEach((completion: any) => {
+                        const date = new Date(completion.completed_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })
+                        if (!grouped[date]) grouped[date] = []
+                        grouped[date].push(completion)
+                      })
+
+                      return Object.entries(grouped).slice(0, 5).map(([date, completions]) => (
+                        <div key={date} className="mb-4">
+                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{date}</p>
+                          <div className="space-y-2">
+                            {(completions as any[]).map((completion: any) => (
+                              <div key={completion.id} className="flex items-start gap-3 p-3 rounded-xl hover:bg-cream-50 transition-colors">
+                                <div className="w-1 h-full min-h-[40px] rounded-full bg-lavender-400" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-slate-700 truncate">
+                                    {completion.prompt?.title || 'Activity'}
+                                  </p>
+                                  <p className="text-xs text-slate-500">
+                                    {completion.child?.name} • {completion.prompt?.category}
+                                  </p>
+                                </div>
+                                <span className="text-xs text-slate-400">
+                                  {new Date(completion.completed_at).toLocaleTimeString('en-US', {
+                                    hour: 'numeric',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    })()}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-3">🌱</div>
+                    <p className="text-sm text-slate-500">No activities yet</p>
+                    <p className="text-xs text-slate-400 mt-1">Complete your first activity to see it here</p>
+                  </div>
+                )}
+
+                {/* Quick Stats Summary */}
+                {monthlyMinutes > 0 && (
+                  <div className="mt-6 pt-6 border-t border-cream-200">
+                    <div className="bg-gradient-to-br from-lavender-50 to-cream-50 rounded-2xl p-4">
+                      <p className="text-sm font-semibold text-slate-700 mb-2">This Month</p>
+                      <div className="flex items-baseline gap-1">
+                        <span className="font-display text-3xl font-bold text-lavender-600">{monthlyMinutes}</span>
+                        <span className="text-sm text-slate-500">minutes</span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">of quality time together</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </aside>
+          </div>
+        </main>
+      </div>
 
       {/* Admin Reset Button (dev only) */}
       <AdminResetButton userId={session.user.id} />

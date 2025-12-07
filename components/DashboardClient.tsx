@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import ChildCardGrid from './ChildCardGrid'
@@ -10,8 +9,6 @@ import QuickMemoryButton from './QuickMemoryButton'
 import ConfettiCelebration from './ConfettiCelebration'
 import MilestoneCelebration, { detectMilestone, type Milestone } from './MilestoneCelebration'
 import EmptyState from './EmptyState'
-import UpcomingEvents from './UpcomingEvents'
-import ErrorBoundary from './ErrorBoundary'
 import type { RecommendationResult, Child } from '@/lib/recommendations/types'
 
 interface Prompt {
@@ -53,10 +50,6 @@ export default function DashboardClient({
   monthlyActivityCountMap = {}
 }: DashboardClientProps) {
   const router = useRouter()
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
 
   const [reflectionOpen, setReflectionOpen] = useState(false)
   const [completingPromptId, setCompletingPromptId] = useState<string | null>(null)
@@ -133,41 +126,24 @@ export default function DashboardClient({
         title="Add Your First Child"
         description="Get started by adding your child's profile to receive age-appropriate connection prompts personalized just for them."
         actionLabel="Add Child Profile"
-        actionHref="/children"
+        actionHref="/children/new"
       />
     )
   }
 
   return (
     <>
-      <div className="space-y-8">
-        {/* Child Card Grid - shows all children with personalized prompts */}
-        <ChildCardGrid
-          children={children}
-          recommendationsMap={recommendationsMap}
-          todayActivityCountMap={todayActivityCountMap}
-          weeklyActivityCountMap={weeklyActivityCountMap}
-          monthlyActivityCountMap={monthlyActivityCountMap}
-          currentStreak={currentStreak}
-          onStartActivity={handleStartActivity}
-          isRefreshing={isRefreshing}
-        />
-
-        {/* Upcoming Events Calendar Widget */}
-        <ErrorBoundary
-          fallback={
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 text-center border-2 border-gray-200 shadow-md">
-              <div className="space-y-3">
-                <div className="text-4xl">📅</div>
-                <h4 className="font-bold text-gray-900">Calendar Unavailable</h4>
-                <p className="text-sm text-gray-600">Unable to load upcoming events right now</p>
-              </div>
-            </div>
-          }
-        >
-          <UpcomingEvents children={children} />
-        </ErrorBoundary>
-      </div>
+      {/* Child Card Grid - shows all children with personalized prompts */}
+      <ChildCardGrid
+        children={children}
+        recommendationsMap={recommendationsMap}
+        todayActivityCountMap={todayActivityCountMap}
+        weeklyActivityCountMap={weeklyActivityCountMap}
+        monthlyActivityCountMap={monthlyActivityCountMap}
+        currentStreak={currentStreak}
+        onStartActivity={handleStartActivity}
+        isRefreshing={isRefreshing}
+      />
 
       {/* Confetti Celebration */}
       <ConfettiCelebration

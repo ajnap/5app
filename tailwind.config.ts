@@ -48,6 +48,22 @@ const config: Config = {
           300: '#86EFAC',
           400: '#4ADE80',
           500: '#22C55E',
+          600: '#16A34A',
+          700: '#15803D',
+        },
+        // Teal for variety
+        teal: {
+          300: '#5EEAD4',
+          400: '#2DD4BF',
+          500: '#14B8A6',
+          600: '#0D9488',
+        },
+        // Rose for variety
+        rose: {
+          300: '#FDA4AF',
+          400: '#FB7185',
+          500: '#F43F5E',
+          600: '#E11D48',
         },
         // Muted slate for text
         slate: {
