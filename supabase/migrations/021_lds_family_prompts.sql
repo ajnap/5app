@@ -7,7 +7,8 @@
 
 UPDATE daily_prompts
 SET tags = array_append(tags, 'lds')
-WHERE tags && ARRAY['faith', 'faith-based', 'christian'];
+WHERE tags && ARRAY['faith', 'faith-based', 'christian']
+AND NOT (tags @> ARRAY['lds']);
 
 -- INFANT PROMPTS (0-1 years) - LDS Family Focus
 INSERT INTO daily_prompts (title, description, activity, category, age_categories, tags, estimated_minutes, date) VALUES
@@ -19,7 +20,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['infant'],
   ARRAY['faith', 'lds', 'music', 'bonding', 'primary'],
   5,
-  '2026-04-01'::DATE
+  '2026-08-01'::DATE
 ),
 (
   'Baby Blessing Moment',
@@ -29,7 +30,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['infant'],
   ARRAY['faith', 'lds', 'blessing', 'bonding', 'spiritual'],
   5,
-  '2026-04-02'::DATE
+  '2026-08-02'::DATE
 );
 
 -- TODDLER PROMPTS (2-4 years) - LDS Values Foundation
@@ -42,7 +43,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['toddler'],
   ARRAY['faith', 'lds', 'prayer', 'teaching'],
   5,
-  '2026-04-03'::DATE
+  '2026-08-03'::DATE
 ),
 (
   'Helping Hands',
@@ -52,7 +53,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['toddler'],
   ARRAY['faith', 'lds', 'service', 'kindness', 'teaching'],
   5,
-  '2026-04-04'::DATE
+  '2026-08-04'::DATE
 ),
 (
   'Primary Song Time',
@@ -62,7 +63,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['toddler'],
   ARRAY['faith', 'lds', 'music', 'primary', 'movement'],
   5,
-  '2026-04-05'::DATE
+  '2026-08-05'::DATE
 ),
 (
   'Toddler Testimony',
@@ -72,7 +73,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['toddler'],
   ARRAY['faith', 'lds', 'testimony', 'teaching'],
   5,
-  '2026-04-06'::DATE
+  '2026-08-06'::DATE
 );
 
 -- ELEMENTARY PROMPTS (5-11 years) - Building Testimony
@@ -85,7 +86,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['elementary'],
   ARRAY['faith', 'lds', 'scripture', 'book of mormon', 'teaching'],
   5,
-  '2026-04-07'::DATE
+  '2026-08-07'::DATE
 ),
 (
   'Secret Service Mission',
@@ -95,7 +96,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['elementary'],
   ARRAY['faith', 'lds', 'service', 'kindness', 'family'],
   5,
-  '2026-04-08'::DATE
+  '2026-08-08'::DATE
 ),
 (
   'Gospel Questions',
@@ -105,7 +106,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['elementary'],
   ARRAY['faith', 'lds', 'testimony', 'teaching', 'communication'],
   5,
-  '2026-04-09'::DATE
+  '2026-08-09'::DATE
 ),
 (
   'Family Prayer Focus',
@@ -115,7 +116,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['elementary'],
   ARRAY['faith', 'lds', 'prayer', 'family', 'gratitude'],
   5,
-  '2026-04-10'::DATE
+  '2026-08-10'::DATE
 ),
 (
   'Temple Talk',
@@ -125,7 +126,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['elementary'],
   ARRAY['faith', 'lds', 'temple', 'family history', 'teaching'],
   5,
-  '2026-04-11'::DATE
+  '2026-08-11'::DATE
 ),
 (
   'FHE Mini Lesson',
@@ -135,7 +136,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['elementary'],
   ARRAY['faith', 'lds', 'fhe', 'family', 'teaching'],
   5,
-  '2026-04-12'::DATE
+  '2026-08-12'::DATE
 );
 
 -- TEEN PROMPTS (12-17 years) - Testimony & Identity
@@ -148,7 +149,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['teen'],
   ARRAY['faith', 'lds', 'scripture', 'come follow me', 'teaching'],
   5,
-  '2026-04-13'::DATE
+  '2026-08-13'::DATE
 ),
 (
   'Standards Support',
@@ -158,7 +159,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['teen'],
   ARRAY['faith', 'lds', 'standards', 'for the strength of youth', 'support'],
   5,
-  '2026-04-14'::DATE
+  '2026-08-14'::DATE
 ),
 (
   'Priesthood/YW Purpose',
@@ -168,7 +169,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['teen'],
   ARRAY['faith', 'lds', 'youth', 'priesthood', 'young women'],
   5,
-  '2026-04-15'::DATE
+  '2026-08-15'::DATE
 ),
 (
   'Mission Thoughts',
@@ -178,7 +179,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['teen'],
   ARRAY['faith', 'lds', 'mission', 'future', 'goals'],
   5,
-  '2026-04-16'::DATE
+  '2026-08-16'::DATE
 ),
 (
   'Testimony Moment',
@@ -188,7 +189,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['teen'],
   ARRAY['faith', 'lds', 'testimony', 'spiritual', 'bonding'],
   5,
-  '2026-04-17'::DATE
+  '2026-08-17'::DATE
 ),
 (
   'Hard Questions Safe Space',
@@ -198,7 +199,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['teen'],
   ARRAY['faith', 'lds', 'questions', 'doubts', 'support'],
   5,
-  '2026-04-18'::DATE
+  '2026-08-18'::DATE
 );
 
 -- YOUNG ADULT PROMPTS (18+ years) - Adult Faith Transition
@@ -211,7 +212,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['young_adult'],
   ARRAY['faith', 'lds', 'testimony', 'spiritual', 'adult relationship'],
   5,
-  '2026-04-19'::DATE
+  '2026-08-19'::DATE
 ),
 (
   'Temple or Church Support',
@@ -221,7 +222,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['young_adult'],
   ARRAY['faith', 'lds', 'temple', 'support', 'unconditional love'],
   5,
-  '2026-04-20'::DATE
+  '2026-08-20'::DATE
 );
 
 -- MULTI-AGE LDS PROMPTS - Family Focus
@@ -234,7 +235,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['toddler', 'elementary', 'teen'],
   ARRAY['faith', 'lds', 'prayer', 'gratitude', 'family'],
   5,
-  '2026-04-21'::DATE
+  '2026-08-21'::DATE
 ),
 (
   'Sunday Family Time',
@@ -244,7 +245,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['elementary', 'teen'],
   ARRAY['faith', 'lds', 'sabbath', 'family', 'quality time'],
   5,
-  '2026-04-22'::DATE
+  '2026-08-22'::DATE
 ),
 (
   'Family History Moment',
@@ -254,7 +255,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['elementary', 'teen', 'young_adult'],
   ARRAY['faith', 'lds', 'family history', 'ancestors', 'identity'],
   5,
-  '2026-04-23'::DATE
+  '2026-08-23'::DATE
 ),
 (
   'Conference Highlight',
@@ -264,7 +265,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['elementary', 'teen', 'young_adult'],
   ARRAY['faith', 'lds', 'general conference', 'prophet', 'teaching'],
   5,
-  '2026-04-24'::DATE
+  '2026-08-24'::DATE
 ),
 (
   'Eternal Family Reminder',
@@ -274,7 +275,7 @@ INSERT INTO daily_prompts (title, description, activity, category, age_categorie
   ARRAY['toddler', 'elementary', 'teen', 'young_adult'],
   ARRAY['faith', 'lds', 'eternal family', 'sealing', 'love'],
   5,
-  '2026-04-25'::DATE
+  '2026-08-25'::DATE
 );
 
 -- Update faith_mode to better support LDS-specific content
