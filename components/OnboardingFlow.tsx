@@ -152,10 +152,10 @@ export default function OnboardingFlow({ userId, userEmail }: OnboardingFlowProp
 
             <div className="card-lavender mb-8">
               <h2 className="font-display text-xl font-semibold text-slate-900 mb-3">
-                Would you like faith-based reflection prompts?
+                Are you a member of The Church of Jesus Christ of Latter-day Saints?
               </h2>
               <p className="text-slate-600 mb-6">
-                We can include optional spiritual reflection questions after activities to help you connect your family moments to deeper meaning and faith.
+                If yes, we'll include activities that incorporate LDS values like family prayer, scripture stories, service, and temple discussions - mixed in with our research-based parenting prompts.
               </p>
 
               <div className="space-y-3">
@@ -170,8 +170,8 @@ export default function OnboardingFlow({ userId, userEmail }: OnboardingFlowProp
                     className="mt-1 mr-4 w-5 h-5 text-lavender-500 focus:ring-lavender-400"
                   />
                   <div>
-                    <div className="font-semibold text-slate-900">Yes, include faith-based prompts</div>
-                    <div className="text-sm text-slate-500">Add gentle spiritual reflection questions to deepen meaning</div>
+                    <div className="font-semibold text-slate-900">Yes, I'm a member</div>
+                    <div className="text-sm text-slate-500">Include LDS-friendly activities like Primary songs, FHE ideas, and gospel discussions</div>
                   </div>
                 </label>
 
@@ -186,8 +186,8 @@ export default function OnboardingFlow({ userId, userEmail }: OnboardingFlowProp
                     className="mt-1 mr-4 w-5 h-5 text-lavender-500 focus:ring-lavender-400"
                   />
                   <div>
-                    <div className="font-semibold text-slate-900">No, keep it secular</div>
-                    <div className="text-sm text-slate-500">Focus on connection without spiritual elements</div>
+                    <div className="font-semibold text-slate-900">No, or I prefer not to say</div>
+                    <div className="text-sm text-slate-500">Show only general parenting activities (still family-values friendly)</div>
                   </div>
                 </label>
               </div>

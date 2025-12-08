@@ -150,18 +150,16 @@ export async function generateRecommendations(
       return true
     })
 
-    // Apply faith mode filter separately (with fallback)
-    // When faith mode is ON: prioritize LDS-tagged prompts, then general faith prompts
-    // When faith mode is OFF: exclude explicitly faith-tagged prompts
+    // Apply faith mode filter
+    // When faith mode is ON (LDS member): Include ALL prompts (both regular and LDS)
+    // When faith mode is OFF: Exclude explicitly LDS/faith-tagged prompts
     let faithFilteredPrompts = eligiblePrompts.filter(prompt => {
       if (faithMode) {
-        // Include LDS, faith-based, or christian tagged prompts
-        return prompt.tags?.includes('lds') ||
-               prompt.tags?.includes('faith-based') ||
-               prompt.tags?.includes('faith') ||
-               prompt.tags?.includes('christian')
+        // LDS members see ALL prompts - both regular and faith-based
+        // This way LDS prompts are mixed in naturally, not dominant
+        return true
       } else {
-        // Exclude explicitly faith-tagged prompts
+        // Non-LDS users don't see explicitly faith-tagged prompts
         return !prompt.tags?.includes('lds') &&
                !prompt.tags?.includes('faith-based') &&
                !prompt.tags?.includes('faith') &&
@@ -174,14 +172,8 @@ export async function generateRecommendations(
       faithFilteredPrompts = eligiblePrompts
     }
 
-    // When faith mode is ON, sort LDS-specific prompts to the top
-    if (faithMode && faithFilteredPrompts.length > 0) {
-      faithFilteredPrompts.sort((a, b) => {
-        const aIsLDS = a.tags?.includes('lds') ? 1 : 0
-        const bIsLDS = b.tags?.includes('lds') ? 1 : 0
-        return bIsLDS - aIsLDS // LDS prompts first
-      })
-    }
+    // Note: We intentionally do NOT sort LDS prompts to the top
+    // They should appear naturally mixed with other prompts based on scoring
 
     const finalEligiblePrompts = faithFilteredPrompts
 
@@ -469,15 +461,15 @@ function getStarterRecommendations(
   // Filter age-appropriate prompts
   const ageAppropriate = allPrompts.filter(p => applyAgeFilter(p, child.age))
 
-  // Filter by faith mode (but don't exclude everything if none match)
-  // When faith mode is ON: prioritize LDS-tagged prompts, then general faith prompts
+  // Filter by faith mode
+  // When faith mode is ON (LDS member): Include ALL prompts (both regular and LDS)
+  // When faith mode is OFF: Exclude explicitly LDS/faith-tagged prompts
   let faithFiltered = ageAppropriate.filter(p => {
     if (faithMode) {
-      return p.tags?.includes('lds') ||
-             p.tags?.includes('faith-based') ||
-             p.tags?.includes('faith') ||
-             p.tags?.includes('christian')
+      // LDS members see ALL prompts - both regular and faith-based
+      return true
     } else {
+      // Non-LDS users don't see explicitly faith-tagged prompts
       return !p.tags?.includes('lds') &&
              !p.tags?.includes('faith-based') &&
              !p.tags?.includes('faith') &&
@@ -490,14 +482,8 @@ function getStarterRecommendations(
     faithFiltered = ageAppropriate
   }
 
-  // When faith mode is ON, sort LDS-specific prompts to the top
-  if (faithMode && faithFiltered.length > 0) {
-    faithFiltered.sort((a, b) => {
-      const aIsLDS = a.tags?.includes('lds') ? 1 : 0
-      const bIsLDS = b.tags?.includes('lds') ? 1 : 0
-      return bIsLDS - aIsLDS // LDS prompts first
-    })
-  }
+  // Note: We intentionally do NOT sort LDS prompts to the top
+  // They should appear naturally mixed with other prompts
 
   // Prefer 5-minute activities for easy first win
   const quickWins = faithFiltered.filter(p => p.estimated_minutes === 5)
