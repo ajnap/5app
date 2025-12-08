@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -12,6 +12,9 @@ import MilestoneCelebration, { detectMilestone, type Milestone } from './Milesto
 import EmptyState from './EmptyState'
 import UpcomingEvents from './UpcomingEvents'
 import ErrorBoundary from './ErrorBoundary'
+import ActionPrompt from './ActionPrompt'
+import FirstTimeGuide from './FirstTimeGuide'
+import ProgressStats from './ProgressStats'
 import type { RecommendationResult, Child } from '@/lib/recommendations/types'
 
 interface Prompt {
@@ -37,6 +40,8 @@ interface DashboardClientProps {
   todayActivityCountMap?: Record<string, number>
   weeklyActivityCountMap?: Record<string, number>
   monthlyActivityCountMap?: Record<string, number>
+  weeklyMinutes?: number
+  monthlyMinutes?: number
 }
 
 export default function DashboardClient({
@@ -50,9 +55,13 @@ export default function DashboardClient({
   recommendationsMap = {},
   todayActivityCountMap = {},
   weeklyActivityCountMap = {},
-  monthlyActivityCountMap = {}
+  monthlyActivityCountMap = {},
+  weeklyMinutes = 0,
+  monthlyMinutes = 0
 }: DashboardClientProps) {
   const router = useRouter()
+  const childCardsRef = useRef<HTMLDivElement>(null)
+  const progressRef = useRef<HTMLDivElement>(null)
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -62,12 +71,29 @@ export default function DashboardClient({
   const [completingPromptId, setCompletingPromptId] = useState<string | null>(null)
   const [completingChildId, setCompletingChildId] = useState<string | null>(null)
   const [completingDuration, setCompletingDuration] = useState<number | undefined>(undefined)
+  const [memoryModalOpen, setMemoryModalOpen] = useState(false)
 
   // Celebration states
   const [showConfetti, setShowConfetti] = useState(false)
   const [milestone, setMilestone] = useState<Milestone | null>(null)
   const [milestoneOpen, setMilestoneOpen] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
+
+  // Action prompt handlers
+  const handleConnectClick = () => {
+    childCardsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const handleMemoryClick = () => {
+    // The QuickMemoryButton will handle opening the modal
+    // We'll trigger a click on it programmatically
+    const memoryButton = document.querySelector('[aria-label="Add a memory"]') as HTMLButtonElement
+    memoryButton?.click()
+  }
+
+  const handleProgressClick = () => {
+    progressRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   // Handle completion from reflection modal
   const handleReflectionComplete = async (notes?: string) => {
@@ -140,18 +166,44 @@ export default function DashboardClient({
 
   return (
     <>
-      <div className="space-y-8">
-        {/* Child Card Grid - shows all children with personalized prompts */}
-        <ChildCardGrid
-          children={children}
-          recommendationsMap={recommendationsMap}
-          todayActivityCountMap={todayActivityCountMap}
-          weeklyActivityCountMap={weeklyActivityCountMap}
-          monthlyActivityCountMap={monthlyActivityCountMap}
-          currentStreak={currentStreak}
-          onStartActivity={handleStartActivity}
-          isRefreshing={isRefreshing}
+      <div className="space-y-6">
+        {/* Action Prompt - "What would you like to do?" */}
+        <ActionPrompt
+          onConnectClick={handleConnectClick}
+          onMemoryClick={handleMemoryClick}
+          onProgressClick={handleProgressClick}
+          hasChildren={children.length > 0}
         />
+
+        {/* First-time onboarding guide */}
+        <FirstTimeGuide
+          totalCompletions={totalCompletions}
+          hasChildren={children.length > 0}
+        />
+
+        {/* Child Card Grid - shows all children with personalized prompts */}
+        <div ref={childCardsRef}>
+          <ChildCardGrid
+            children={children}
+            recommendationsMap={recommendationsMap}
+            todayActivityCountMap={todayActivityCountMap}
+            weeklyActivityCountMap={weeklyActivityCountMap}
+            monthlyActivityCountMap={monthlyActivityCountMap}
+            currentStreak={currentStreak}
+            onStartActivity={handleStartActivity}
+            isRefreshing={isRefreshing}
+          />
+        </div>
+
+        {/* Collapsible Progress Stats */}
+        <div ref={progressRef}>
+          <ProgressStats
+            currentStreak={currentStreak}
+            totalCompletions={totalCompletions}
+            weeklyMinutes={weeklyMinutes}
+            monthlyMinutes={monthlyMinutes}
+          />
+        </div>
 
         {/* Upcoming Events Calendar Widget */}
         <ErrorBoundary

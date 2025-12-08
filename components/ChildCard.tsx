@@ -174,9 +174,9 @@ const ChildCard = memo(function ChildCard({
           <button
             onClick={handleStart}
             disabled={!currentPrompt || isStarting}
-            className="flex-1 bg-gradient-to-r from-primary-600 via-primary-700 to-purple-600 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:shadow-xl focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="flex-1 bg-gradient-to-r from-lavender-500 via-lavender-600 to-purple-600 text-white px-6 py-3.5 rounded-xl font-bold shadow-md hover:shadow-xl focus:ring-2 focus:ring-lavender-400 focus:ring-offset-2 transform hover:scale-[1.02] active:scale-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             data-testid={`child-card-start-${child.id}`}
-            aria-label={currentPrompt ? `Start activity: ${currentPrompt.title}` : 'No activity available'}
+            aria-label={currentPrompt ? `Connect with ${child.name}: ${currentPrompt.title}` : 'No activity available'}
           >
             {isStarting ? (
               <span className="flex items-center justify-center gap-2">
@@ -188,7 +188,10 @@ const ChildCard = memo(function ChildCard({
                 <span aria-hidden="true">Starting...</span>
               </span>
             ) : (
-              <span><span className="sr-only">Play</span><span aria-hidden="true">▶</span> Start Activity</span>
+              <span className="flex items-center justify-center gap-2">
+                <span aria-hidden="true">💝</span>
+                <span>Connect Now</span>
+              </span>
             )}
           </button>
 

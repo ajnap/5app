@@ -28,6 +28,14 @@ function calculateAge(birthDate: string): number {
   return age
 }
 
+// Helper function for time-based greeting
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
 export default async function DashboardPage() {
   const supabase = await createServerClient()
 
@@ -254,91 +262,33 @@ export default async function DashboardPage() {
 
       {/* Main Content */}
       <main className="container-narrow py-8">
-        {/* Subscription Status Banner */}
+        {/* Subscription Status Banner - more subtle */}
         {!isPremium && (
-          <div className="card-elevated bg-gradient-to-r from-peach-50 via-peach-100 to-peach-50 border-2 border-peach-200 mb-8 fade-in-up">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div className="flex items-start gap-3">
-                <span className="text-3xl">✨</span>
-                <div>
-                  <p className="font-display text-lg font-semibold text-slate-900">Unlock Full Access</p>
-                  <p className="text-slate-600 text-sm">Upgrade to premium for unlimited prompts and advanced features</p>
-                </div>
-              </div>
-              <Link href={ROUTES.ACCOUNT} className="btn-primary whitespace-nowrap pulse-glow">
-                Upgrade Now
+          <div className="bg-gradient-to-r from-peach-50 to-cream-50 border border-peach-200 rounded-xl px-4 py-3 mb-6 fade-in-up">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <p className="text-sm text-slate-700">
+                <span className="font-medium">✨ Unlock premium</span> for unlimited prompts
+              </p>
+              <Link href={ROUTES.ACCOUNT} className="text-sm font-semibold text-lavender-600 hover:text-lavender-700 transition-colors">
+                Upgrade →
               </Link>
             </div>
           </div>
         )}
 
-        {/* Today's Date Card */}
-        <div className="text-center mb-10 fade-in-up">
-          <div className="inline-flex flex-col items-center bg-white rounded-3xl px-10 py-6 shadow-soft border border-cream-200">
-            <p className="text-lavender-500 text-xs uppercase tracking-widest font-bold mb-1">Today</p>
-            <p className="font-display text-2xl md:text-3xl font-semibold text-slate-900">
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </p>
-          </div>
+        {/* Warm greeting - minimal */}
+        <div className="mb-6 fade-in-up">
+          <h1 className="font-display text-2xl md:text-3xl font-semibold text-slate-900">
+            {getGreeting()}
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">
+            {new Date().toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'long',
+              day: 'numeric'
+            })}
+          </p>
         </div>
-
-        {/* Progress Stats */}
-        {(currentStreak > 0 || totalCompletions > 0) && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10 fade-in-up delay-100">
-            {/* Streak Card */}
-            <div className="card-elevated group hover:border-peach-200">
-              <div className="flex items-center gap-4">
-                <div className="text-4xl transition-transform group-hover:scale-110">
-                  {currentStreak > 0 ? '🔥' : '🌱'}
-                </div>
-                <div>
-                  {currentStreak > 0 ? (
-                    <>
-                      <p className="font-display text-3xl font-bold text-slate-900">{currentStreak}</p>
-                      <p className="text-slate-500 text-sm font-medium">Day Streak</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="font-display text-lg font-semibold text-slate-900">Start Today!</p>
-                      <p className="text-slate-500 text-sm">Complete an activity</p>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Total Completions Card */}
-            <div className="card-elevated group hover:border-sage-200">
-              <div className="flex items-center gap-4">
-                <div className="text-4xl transition-transform group-hover:scale-110">✅</div>
-                <div>
-                  <p className="font-display text-3xl font-bold text-slate-900">{totalCompletions}</p>
-                  <p className="text-slate-500 text-sm font-medium">Activities Done</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Time Stats Card */}
-            {(weeklyMinutes > 0 || monthlyMinutes > 0) && (
-              <div className="card-elevated group hover:border-lavender-200">
-                <div className="flex items-center gap-4">
-                  <div className="text-4xl transition-transform group-hover:scale-110">⏱️</div>
-                  <div>
-                    <p className="font-display text-3xl font-bold text-slate-900">{weeklyMinutes}</p>
-                    <p className="text-slate-500 text-sm font-medium">Min This Week</p>
-                    {monthlyMinutes > 0 && (
-                      <p className="text-xs text-slate-400">{monthlyMinutes} min this month</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Child Selector and Filtered Prompts */}
         <DashboardClient
@@ -353,6 +303,8 @@ export default async function DashboardPage() {
           todayActivityCountMap={todayActivityCountMap}
           weeklyActivityCountMap={weeklyActivityCountMap}
           monthlyActivityCountMap={monthlyActivityCountMap}
+          weeklyMinutes={weeklyMinutes}
+          monthlyMinutes={monthlyMinutes}
         />
       </main>
 
