@@ -79,6 +79,14 @@ export default function DashboardClient({
   const [milestoneOpen, setMilestoneOpen] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
+  // Get greeting based on client's local time
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Good morning'
+    if (hour < 17) return 'Good afternoon'
+    return 'Good evening'
+  }
+
   // Action prompt handlers
   const handleConnectClick = () => {
     childCardsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -167,6 +175,20 @@ export default function DashboardClient({
   return (
     <>
       <div className="space-y-6">
+        {/* Warm greeting - uses client's local time */}
+        <div className="fade-in-up">
+          <h1 className="font-display text-2xl md:text-3xl font-semibold text-slate-900">
+            {getGreeting()}
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">
+            {new Date().toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'long',
+              day: 'numeric'
+            })}
+          </p>
+        </div>
+
         {/* Action Prompt - "What would you like to do?" */}
         <ActionPrompt
           onConnectClick={handleConnectClick}

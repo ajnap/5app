@@ -29,8 +29,12 @@ function calculateAge(birthDate: string): number {
 }
 
 // Helper function for time-based greeting
+// Note: This runs at request time on the server, using server's timezone
+// For accurate client-side time, we pass it to DashboardClient
 function getGreeting(): string {
-  const hour = new Date().getHours()
+  // Get current hour in a way that works for SSR
+  const now = new Date()
+  const hour = now.getHours()
   if (hour < 12) return 'Good morning'
   if (hour < 17) return 'Good afternoon'
   return 'Good evening'
@@ -276,19 +280,7 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* Warm greeting - minimal */}
-        <div className="mb-6 fade-in-up">
-          <h1 className="font-display text-2xl md:text-3xl font-semibold text-slate-900">
-            {getGreeting()}
-          </h1>
-          <p className="text-slate-500 text-sm mt-1">
-            {new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric'
-            })}
-          </p>
-        </div>
+        {/* Warm greeting - handled by DashboardClient for correct timezone */}
 
         {/* Child Selector and Filtered Prompts */}
         <DashboardClient
