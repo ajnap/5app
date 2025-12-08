@@ -1,80 +1,210 @@
 import Link from 'next/link'
 
-// Playful character illustrations (SVG components)
+// Playful character illustrations (SVG components) - Family of friendly shapes
 function CharacterGroup() {
   return (
-    <div className="flex items-end justify-center gap-2 md:gap-4">
-      {/* Blue triangle character */}
-      <div className="w-12 h-16 md:w-16 md:h-20 relative animate-bounce-gentle" style={{ animationDelay: '0s' }}>
-        <svg viewBox="0 0 60 80" className="w-full h-full">
-          <path d="M30 5 L55 70 L5 70 Z" fill="#6366F1" />
-          <circle cx="22" cy="45" r="4" fill="white" />
-          <circle cx="38" cy="45" r="4" fill="white" />
-          <circle cx="22" cy="45" r="2" fill="#1E293B" />
-          <circle cx="38" cy="45" r="2" fill="#1E293B" />
-          <ellipse cx="30" cy="75" rx="8" ry="3" fill="#4F46E5" />
+    <div className="flex items-end justify-center gap-3 md:gap-5">
+      {/* Blue triangle character - curious explorer */}
+      <div className="w-14 h-18 md:w-18 md:h-24 relative animate-bounce-gentle" style={{ animationDelay: '0s' }}>
+        <svg viewBox="0 0 60 80" className="w-full h-full drop-shadow-lg">
+          {/* Body */}
+          <path d="M30 8 L54 65 L6 65 Z" fill="#818CF8" />
+          <path d="M30 8 L54 65 L6 65 Z" fill="url(#triangleGradient)" />
+          {/* Face highlight */}
+          <path d="M30 20 L42 50 L18 50 Z" fill="#A5B4FC" opacity="0.4" />
+          {/* Eyes */}
+          <ellipse cx="22" cy="42" rx="5" ry="5.5" fill="white" />
+          <ellipse cx="38" cy="42" rx="5" ry="5.5" fill="white" />
+          <circle cx="23" cy="43" r="2.5" fill="#1E293B" />
+          <circle cx="39" cy="43" r="2.5" fill="#1E293B" />
+          {/* Eye sparkles */}
+          <circle cx="24.5" cy="41.5" r="1" fill="white" />
+          <circle cx="40.5" cy="41.5" r="1" fill="white" />
+          {/* Rosy cheeks */}
+          <circle cx="16" cy="48" r="4" fill="#FDA4AF" opacity="0.6" />
+          <circle cx="44" cy="48" r="4" fill="#FDA4AF" opacity="0.6" />
+          {/* Happy smile */}
+          <path d="M24 52 Q30 58 36 52" stroke="#1E293B" strokeWidth="2" fill="none" strokeLinecap="round" />
+          {/* Little feet */}
+          <ellipse cx="22" cy="68" rx="6" ry="3" fill="#6366F1" />
+          <ellipse cx="38" cy="68" rx="6" ry="3" fill="#6366F1" />
+          <defs>
+            <linearGradient id="triangleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#A5B4FC" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#6366F1" stopOpacity="0" />
+            </linearGradient>
+          </defs>
         </svg>
       </div>
 
-      {/* Green blob character */}
-      <div className="w-14 h-16 md:w-18 md:h-20 relative animate-bounce-gentle" style={{ animationDelay: '0.2s' }}>
-        <svg viewBox="0 0 70 80" className="w-full h-full">
-          <ellipse cx="35" cy="45" rx="28" ry="32" fill="#4ADE80" />
-          <circle cx="25" cy="40" r="4" fill="white" />
-          <circle cx="45" cy="40" r="4" fill="white" />
-          <circle cx="25" cy="40" r="2" fill="#1E293B" />
-          <circle cx="45" cy="40" r="2" fill="#1E293B" />
-          <path d="M28 55 Q35 62 42 55" stroke="#1E293B" strokeWidth="2" fill="none" />
+      {/* Green blob character - the hugger */}
+      <div className="w-16 h-18 md:w-20 md:h-24 relative animate-bounce-gentle" style={{ animationDelay: '0.15s' }}>
+        <svg viewBox="0 0 70 80" className="w-full h-full drop-shadow-lg">
+          {/* Body blob */}
+          <ellipse cx="35" cy="42" rx="28" ry="30" fill="#4ADE80" />
+          <ellipse cx="35" cy="42" rx="28" ry="30" fill="url(#blobGradient)" />
+          {/* Highlight */}
+          <ellipse cx="28" cy="32" rx="12" ry="10" fill="#86EFAC" opacity="0.5" />
+          {/* Eyes */}
+          <ellipse cx="25" cy="38" rx="5.5" ry="6" fill="white" />
+          <ellipse cx="45" cy="38" rx="5.5" ry="6" fill="white" />
+          <circle cx="26" cy="39" r="3" fill="#1E293B" />
+          <circle cx="46" cy="39" r="3" fill="#1E293B" />
+          {/* Eye sparkles */}
+          <circle cx="27.5" cy="37" r="1.2" fill="white" />
+          <circle cx="47.5" cy="37" r="1.2" fill="white" />
+          {/* Rosy cheeks */}
+          <circle cx="17" cy="46" r="5" fill="#FCA5A5" opacity="0.5" />
+          <circle cx="53" cy="46" r="5" fill="#FCA5A5" opacity="0.5" />
+          {/* Big happy smile */}
+          <path d="M25 52 Q35 62 45 52" stroke="#1E293B" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+          {/* Little arms reaching out */}
+          <ellipse cx="8" cy="45" rx="6" ry="4" fill="#22C55E" />
+          <ellipse cx="62" cy="45" rx="6" ry="4" fill="#22C55E" />
+          {/* Feet */}
+          <ellipse cx="25" cy="72" rx="7" ry="4" fill="#22C55E" />
+          <ellipse cx="45" cy="72" rx="7" ry="4" fill="#22C55E" />
+          <defs>
+            <linearGradient id="blobGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#86EFAC" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#22C55E" stopOpacity="0" />
+            </linearGradient>
+          </defs>
         </svg>
       </div>
 
-      {/* Pink spiky character */}
-      <div className="w-14 h-18 md:w-18 md:h-22 relative animate-bounce-gentle" style={{ animationDelay: '0.4s' }}>
-        <svg viewBox="0 0 80 90" className="w-full h-full">
-          <circle cx="40" cy="50" r="25" fill="#F472B6" />
-          <path d="M40 10 L45 30 L35 30 Z" fill="#F472B6" />
-          <path d="M15 35 L30 40 L25 50 Z" fill="#F472B6" />
-          <path d="M65 35 L50 40 L55 50 Z" fill="#F472B6" />
-          <path d="M20 60 L35 55 L30 65 Z" fill="#F472B6" />
-          <path d="M60 60 L45 55 L50 65 Z" fill="#F472B6" />
-          <circle cx="32" cy="45" r="4" fill="white" />
-          <circle cx="48" cy="45" r="4" fill="white" />
-          <circle cx="32" cy="45" r="2" fill="#1E293B" />
-          <circle cx="48" cy="45" r="2" fill="#1E293B" />
+      {/* Pink star character - the sparkly one */}
+      <div className="w-16 h-20 md:w-20 md:h-26 relative animate-bounce-gentle" style={{ animationDelay: '0.3s' }}>
+        <svg viewBox="0 0 80 90" className="w-full h-full drop-shadow-lg">
+          {/* Star body with rounded points */}
+          <circle cx="40" cy="48" r="24" fill="#F472B6" />
+          <circle cx="40" cy="48" r="24" fill="url(#starGradient)" />
+          {/* Star points */}
+          <ellipse cx="40" cy="16" rx="6" ry="12" fill="#F472B6" />
+          <ellipse cx="14" cy="38" rx="12" ry="6" fill="#F472B6" />
+          <ellipse cx="66" cy="38" rx="12" ry="6" fill="#F472B6" />
+          <ellipse cx="20" cy="68" rx="8" ry="10" fill="#F472B6" />
+          <ellipse cx="60" cy="68" rx="8" ry="10" fill="#F472B6" />
+          {/* Face highlight */}
+          <circle cx="34" cy="40" r="10" fill="#F9A8D4" opacity="0.5" />
+          {/* Eyes - slightly closed happy */}
+          <ellipse cx="32" cy="44" rx="5" ry="5.5" fill="white" />
+          <ellipse cx="48" cy="44" rx="5" ry="5.5" fill="white" />
+          <circle cx="33" cy="45" r="2.5" fill="#1E293B" />
+          <circle cx="49" cy="45" r="2.5" fill="#1E293B" />
+          {/* Eye sparkles */}
+          <circle cx="34.5" cy="43" r="1" fill="white" />
+          <circle cx="50.5" cy="43" r="1" fill="white" />
+          {/* Rosy cheeks */}
+          <circle cx="24" cy="52" r="5" fill="#FCA5A5" opacity="0.6" />
+          <circle cx="56" cy="52" r="5" fill="#FCA5A5" opacity="0.6" />
+          {/* Cute smile */}
+          <path d="M34 56 Q40 62 46 56" stroke="#1E293B" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <defs>
+            <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#F9A8D4" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#EC4899" stopOpacity="0" />
+            </linearGradient>
+          </defs>
         </svg>
       </div>
 
-      {/* Orange circle character (main/center) */}
-      <div className="w-16 h-18 md:w-20 md:h-24 relative animate-bounce-gentle" style={{ animationDelay: '0.1s' }}>
-        <svg viewBox="0 0 80 90" className="w-full h-full">
-          <circle cx="40" cy="45" r="32" fill="#FB923C" />
-          <circle cx="30" cy="40" r="6" fill="white" />
-          <circle cx="50" cy="40" r="6" fill="white" />
-          <circle cx="30" cy="40" r="3" fill="#1E293B" />
-          <circle cx="50" cy="40" r="3" fill="#1E293B" />
-          <ellipse cx="40" cy="85" rx="10" ry="4" fill="#EA580C" />
+      {/* Orange circle character - main/center, the leader */}
+      <div className="w-20 h-22 md:w-26 md:h-30 relative animate-bounce-gentle" style={{ animationDelay: '0.1s' }}>
+        <svg viewBox="0 0 80 85" className="w-full h-full drop-shadow-xl">
+          {/* Main body */}
+          <circle cx="40" cy="40" r="34" fill="#FB923C" />
+          <circle cx="40" cy="40" r="34" fill="url(#orangeGradient)" />
+          {/* Highlight */}
+          <ellipse cx="30" cy="28" rx="14" ry="12" fill="#FDBA74" opacity="0.6" />
+          {/* Eyes - big and expressive */}
+          <ellipse cx="28" cy="36" rx="7" ry="8" fill="white" />
+          <ellipse cx="52" cy="36" rx="7" ry="8" fill="white" />
+          <circle cx="30" cy="38" r="4" fill="#1E293B" />
+          <circle cx="54" cy="38" r="4" fill="#1E293B" />
+          {/* Eye sparkles */}
+          <circle cx="32" cy="35" r="1.5" fill="white" />
+          <circle cx="56" cy="35" r="1.5" fill="white" />
+          {/* Rosy cheeks */}
+          <circle cx="18" cy="46" r="6" fill="#FCA5A5" opacity="0.5" />
+          <circle cx="62" cy="46" r="6" fill="#FCA5A5" opacity="0.5" />
+          {/* Big warm smile */}
+          <path d="M28 52 Q40 64 52 52" stroke="#1E293B" strokeWidth="3" fill="none" strokeLinecap="round" />
+          {/* Little feet */}
+          <ellipse cx="28" cy="78" rx="8" ry="4" fill="#EA580C" />
+          <ellipse cx="52" cy="78" rx="8" ry="4" fill="#EA580C" />
+          <defs>
+            <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FED7AA" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#EA580C" stopOpacity="0" />
+            </linearGradient>
+          </defs>
         </svg>
       </div>
 
-      {/* Small orange character */}
-      <div className="w-10 h-12 md:w-12 md:h-16 relative animate-bounce-gentle" style={{ animationDelay: '0.3s' }}>
-        <svg viewBox="0 0 50 65" className="w-full h-full">
-          <circle cx="25" cy="30" r="20" fill="#FDBA74" />
-          <circle cx="18" cy="28" r="3" fill="white" />
-          <circle cx="32" cy="28" r="3" fill="white" />
-          <circle cx="18" cy="28" r="1.5" fill="#1E293B" />
-          <circle cx="32" cy="28" r="1.5" fill="#1E293B" />
+      {/* Small peach character - the little one */}
+      <div className="w-12 h-14 md:w-16 md:h-20 relative animate-bounce-gentle" style={{ animationDelay: '0.25s' }}>
+        <svg viewBox="0 0 50 60" className="w-full h-full drop-shadow-lg">
+          {/* Body */}
+          <circle cx="25" cy="28" r="22" fill="#FDBA74" />
+          <circle cx="25" cy="28" r="22" fill="url(#peachGradient)" />
+          {/* Highlight */}
+          <ellipse cx="20" cy="20" rx="8" ry="7" fill="#FED7AA" opacity="0.6" />
+          {/* Eyes */}
+          <ellipse cx="18" cy="26" rx="4" ry="4.5" fill="white" />
+          <ellipse cx="32" cy="26" rx="4" ry="4.5" fill="white" />
+          <circle cx="19" cy="27" r="2" fill="#1E293B" />
+          <circle cx="33" cy="27" r="2" fill="#1E293B" />
+          {/* Eye sparkles */}
+          <circle cx="20" cy="25" r="0.8" fill="white" />
+          <circle cx="34" cy="25" r="0.8" fill="white" />
+          {/* Rosy cheeks */}
+          <circle cx="12" cy="32" r="4" fill="#FCA5A5" opacity="0.5" />
+          <circle cx="38" cy="32" r="4" fill="#FCA5A5" opacity="0.5" />
+          {/* Small smile */}
+          <path d="M20 36 Q25 41 30 36" stroke="#1E293B" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          {/* Little feet */}
+          <ellipse cx="18" cy="52" rx="5" ry="3" fill="#F97316" />
+          <ellipse cx="32" cy="52" rx="5" ry="3" fill="#F97316" />
+          <defs>
+            <linearGradient id="peachGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FED7AA" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#F97316" stopOpacity="0" />
+            </linearGradient>
+          </defs>
         </svg>
       </div>
 
-      {/* Purple teardrop character */}
-      <div className="w-12 h-16 md:w-14 md:h-20 relative animate-bounce-gentle" style={{ animationDelay: '0.5s' }}>
-        <svg viewBox="0 0 55 80" className="w-full h-full">
-          <path d="M27.5 10 Q5 45 27.5 70 Q50 45 27.5 10" fill="#A78BFA" />
-          <circle cx="20" cy="45" r="4" fill="white" />
-          <circle cx="35" cy="45" r="4" fill="white" />
-          <circle cx="20" cy="45" r="2" fill="#1E293B" />
-          <circle cx="35" cy="45" r="2" fill="#1E293B" />
+      {/* Purple teardrop character - the dreamer */}
+      <div className="w-14 h-18 md:w-18 md:h-24 relative animate-bounce-gentle" style={{ animationDelay: '0.4s' }}>
+        <svg viewBox="0 0 55 75" className="w-full h-full drop-shadow-lg">
+          {/* Teardrop body */}
+          <path d="M27.5 8 Q4 42 27.5 68 Q51 42 27.5 8" fill="#A78BFA" />
+          <path d="M27.5 8 Q4 42 27.5 68 Q51 42 27.5 8" fill="url(#purpleGradient)" />
+          {/* Highlight */}
+          <ellipse cx="22" cy="35" rx="8" ry="10" fill="#C4B5FD" opacity="0.5" />
+          {/* Eyes */}
+          <ellipse cx="20" cy="42" rx="5" ry="5.5" fill="white" />
+          <ellipse cx="35" cy="42" rx="5" ry="5.5" fill="white" />
+          <circle cx="21" cy="43" r="2.5" fill="#1E293B" />
+          <circle cx="36" cy="43" r="2.5" fill="#1E293B" />
+          {/* Eye sparkles */}
+          <circle cx="22.5" cy="41" r="1" fill="white" />
+          <circle cx="37.5" cy="41" r="1" fill="white" />
+          {/* Rosy cheeks */}
+          <circle cx="13" cy="49" r="4" fill="#FCA5A5" opacity="0.5" />
+          <circle cx="42" cy="49" r="4" fill="#FCA5A5" opacity="0.5" />
+          {/* Content smile */}
+          <path d="M22 54 Q27.5 60 33 54" stroke="#1E293B" strokeWidth="2" fill="none" strokeLinecap="round" />
+          {/* Little feet */}
+          <ellipse cx="20" cy="70" rx="5" ry="3" fill="#7C3AED" />
+          <ellipse cx="35" cy="70" rx="5" ry="3" fill="#7C3AED" />
+          <defs>
+            <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#DDD6FE" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#7C3AED" stopOpacity="0" />
+            </linearGradient>
+          </defs>
         </svg>
       </div>
     </div>
@@ -140,16 +270,16 @@ export default function LandingPage() {
       <section className="section pt-8 md:pt-16 overflow-hidden">
         <div className="container-narrow">
           <div className="text-center max-w-4xl mx-auto">
-            {/* Main headline */}
-            <h1 className="font-display text-display-lg md:text-display-xl text-slate-900 mb-6 fade-in-up">
-              Parent Confidently with{' '}
-              <span className="gradient-text">5-Minute</span>{' '}
-              Connections
+            {/* Main headline - properly aligned */}
+            <h1 className="font-display text-display-lg md:text-display-xl text-slate-900 mb-6 fade-in-up leading-tight">
+              <span className="block">Parent Confidently with</span>
+              <span className="gradient-text inline-block">5-Minute</span>
+              <span> Connections</span>
             </h1>
 
             <p className="text-body-lg md:text-xl text-slate-600 mb-8 max-w-2xl mx-auto fade-in-up delay-100">
-              The only parenting app you'll ever need. Daily expert-backed activities,
-              personalized to your child's age and interests. Smarter than every baby book.
+              The only parenting app you&apos;ll ever need. Daily expert-backed activities,
+              personalized to your child&apos;s age and interests. Smarter than every baby book.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 fade-in-up delay-200">
