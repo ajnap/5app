@@ -151,17 +151,36 @@ export async function generateRecommendations(
     })
 
     // Apply faith mode filter separately (with fallback)
+    // When faith mode is ON: prioritize LDS-tagged prompts, then general faith prompts
+    // When faith mode is OFF: exclude explicitly faith-tagged prompts
     let faithFilteredPrompts = eligiblePrompts.filter(prompt => {
       if (faithMode) {
-        return prompt.tags?.includes('faith-based') || prompt.tags?.includes('christian')
+        // Include LDS, faith-based, or christian tagged prompts
+        return prompt.tags?.includes('lds') ||
+               prompt.tags?.includes('faith-based') ||
+               prompt.tags?.includes('faith') ||
+               prompt.tags?.includes('christian')
       } else {
-        return !prompt.tags?.includes('faith-based') && !prompt.tags?.includes('christian')
+        // Exclude explicitly faith-tagged prompts
+        return !prompt.tags?.includes('lds') &&
+               !prompt.tags?.includes('faith-based') &&
+               !prompt.tags?.includes('faith') &&
+               !prompt.tags?.includes('christian')
       }
     })
 
     // Fallback: if faith filter excluded everything, use all eligible prompts
     if (faithFilteredPrompts.length === 0 && eligiblePrompts.length > 0) {
       faithFilteredPrompts = eligiblePrompts
+    }
+
+    // When faith mode is ON, sort LDS-specific prompts to the top
+    if (faithMode && faithFilteredPrompts.length > 0) {
+      faithFilteredPrompts.sort((a, b) => {
+        const aIsLDS = a.tags?.includes('lds') ? 1 : 0
+        const bIsLDS = b.tags?.includes('lds') ? 1 : 0
+        return bIsLDS - aIsLDS // LDS prompts first
+      })
     }
 
     const finalEligiblePrompts = faithFilteredPrompts
@@ -253,7 +272,7 @@ export async function generateRecommendations(
         )
 
         if (diversePrompts.length >= 3) {
-          const selected = selectDiverseRecommendations(diversePrompts, limit)
+          const selected = selectDiverseRecommendations(diversePrompts, limit, childId)
           const duration = Date.now() - startTime
 
           logRecommendationMetrics({
@@ -290,7 +309,7 @@ export async function generateRecommendations(
       }
 
       // 8. Select diverse recommendations
-      const recommendations = selectDiverseRecommendations(scoredPrompts, limit)
+      const recommendations = selectDiverseRecommendations(scoredPrompts, limit, childId)
 
       const duration = Date.now() - startTime
 
@@ -358,16 +377,38 @@ export async function generateRecommendations(
 /**
  * Selects diverse recommendations ensuring category and tag variety
  * Max 2 from same category, max 2 with same primary tag
+ * Adds daily rotation based on date to prevent same prompts appearing daily
  */
 function selectDiverseRecommendations(
   scoredPrompts: ScoredPrompt[],
-  limit: number
+  limit: number,
+  childId?: string
 ): ScoredPrompt[] {
   const selected: ScoredPrompt[] = []
   const usedCategories = new Map<string, number>()
   const usedPrimaryTags = new Map<string, number>()
 
-  for (const scored of scoredPrompts) {
+  // Create a daily rotation offset based on today's date and child ID
+  // This ensures different prompts each day and different prompts for siblings
+  const today = new Date()
+  const dateNumber = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate()
+  const childHash = childId ? hashString(childId) : 0
+  const rotationOffset = (dateNumber + childHash) % Math.max(scoredPrompts.length, 1)
+
+  // Rotate the scored prompts array for this child/date combination
+  const rotatedPrompts = [...scoredPrompts]
+  if (rotationOffset > 0 && rotatedPrompts.length > 1) {
+    // Shuffle based on rotation offset while respecting relative scores
+    const topTier = rotatedPrompts.slice(0, Math.min(10, rotatedPrompts.length))
+    const rest = rotatedPrompts.slice(10)
+
+    // Rotate within the top tier to add daily variety
+    const rotateAmount = rotationOffset % topTier.length
+    const rotatedTop = [...topTier.slice(rotateAmount), ...topTier.slice(0, rotateAmount)]
+    rotatedPrompts.splice(0, rotatedPrompts.length, ...rotatedTop, ...rest)
+  }
+
+  for (const scored of rotatedPrompts) {
     if (selected.length >= limit) break
 
     const category = scored.prompt.category
@@ -388,8 +429,8 @@ function selectDiverseRecommendations(
   }
 
   // Fallback: if we don't have at least 3, add more regardless of diversity
-  if (selected.length < 3 && scoredPrompts.length >= 3) {
-    for (const scored of scoredPrompts) {
+  if (selected.length < 3 && rotatedPrompts.length >= 3) {
+    for (const scored of rotatedPrompts) {
       if (selected.length >= limit) break
       if (!selected.includes(scored)) {
         selected.push(scored)
@@ -398,6 +439,20 @@ function selectDiverseRecommendations(
   }
 
   return selected
+}
+
+/**
+ * Simple hash function for string to number
+ * Used to create consistent but different offsets for each child
+ */
+function hashString(str: string): number {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // Convert to 32bit integer
+  }
+  return Math.abs(hash)
 }
 
 /**
@@ -415,17 +470,33 @@ function getStarterRecommendations(
   const ageAppropriate = allPrompts.filter(p => applyAgeFilter(p, child.age))
 
   // Filter by faith mode (but don't exclude everything if none match)
+  // When faith mode is ON: prioritize LDS-tagged prompts, then general faith prompts
   let faithFiltered = ageAppropriate.filter(p => {
     if (faithMode) {
-      return p.tags?.includes('faith-based') || p.tags?.includes('christian')
+      return p.tags?.includes('lds') ||
+             p.tags?.includes('faith-based') ||
+             p.tags?.includes('faith') ||
+             p.tags?.includes('christian')
     } else {
-      return !p.tags?.includes('faith-based') && !p.tags?.includes('christian')
+      return !p.tags?.includes('lds') &&
+             !p.tags?.includes('faith-based') &&
+             !p.tags?.includes('faith') &&
+             !p.tags?.includes('christian')
     }
   })
 
   // Fallback: if faith filter resulted in no prompts, use all age-appropriate prompts
   if (faithFiltered.length === 0) {
     faithFiltered = ageAppropriate
+  }
+
+  // When faith mode is ON, sort LDS-specific prompts to the top
+  if (faithMode && faithFiltered.length > 0) {
+    faithFiltered.sort((a, b) => {
+      const aIsLDS = a.tags?.includes('lds') ? 1 : 0
+      const bIsLDS = b.tags?.includes('lds') ? 1 : 0
+      return bIsLDS - aIsLDS // LDS prompts first
+    })
   }
 
   // Prefer 5-minute activities for easy first win
@@ -441,21 +512,39 @@ function getStarterRecommendations(
     byCategory.get(category)!.push(prompt)
   }
 
-  // Pick one from each category (round-robin)
-  const diverse: Prompt[] = []
+  // Get categories list
   const categories = Array.from(byCategory.keys())
+
+  // Create a rotation offset based on today's date and child ID
+  // This ensures siblings get different prompts
+  const today = new Date()
+  const dateNumber = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate()
+  const childHash = hashString(child.id)
+  const rotationOffset = (dateNumber + childHash) % Math.max(categories.length, 1)
+
+  // Rotate categories order based on child ID for sibling diversity
+  const rotatedCategories = [...categories]
+  for (let i = 0; i < rotationOffset; i++) {
+    rotatedCategories.push(rotatedCategories.shift()!)
+  }
+
+  // Pick one from each category (round-robin with rotation)
+  const diverse: Prompt[] = []
 
   let categoryIndex = 0
   while (diverse.length < limit && byCategory.size > 0) {
-    const category = categories[categoryIndex % categories.length]
+    const category = rotatedCategories[categoryIndex % rotatedCategories.length]
     const prompts = byCategory.get(category)
 
     if (prompts && prompts.length > 0) {
-      diverse.push(prompts.shift()!)
+      // Also rotate within the category based on child hash
+      const promptIndex = childHash % prompts.length
+      diverse.push(prompts.splice(promptIndex, 1)[0])
 
       if (prompts.length === 0) {
         byCategory.delete(category)
-        categories.splice(categoryIndex % categories.length, 1)
+        const catIdx = rotatedCategories.indexOf(category)
+        if (catIdx > -1) rotatedCategories.splice(catIdx, 1)
       }
     }
 
