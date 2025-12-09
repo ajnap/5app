@@ -11,7 +11,7 @@ interface ChildCardGridProps {
   todayActivityCountMap: Record<string, number>
   weeklyActivityCountMap: Record<string, number>
   monthlyActivityCountMap: Record<string, number>
-  currentStreak: number
+  childStreakMap: Record<string, number>
   onStartActivity: (promptId: string, childId: string) => void
   isRefreshing?: boolean
 }
@@ -22,7 +22,7 @@ export default function ChildCardGrid({
   todayActivityCountMap,
   weeklyActivityCountMap,
   monthlyActivityCountMap,
-  currentStreak,
+  childStreakMap,
   onStartActivity,
   isRefreshing = false
 }: ChildCardGridProps) {
@@ -71,6 +71,7 @@ export default function ChildCardGrid({
           const todayActivityCount = todayActivityCountMap[child.id] || 0
           const weeklyActivityCount = weeklyActivityCountMap[child.id] || 0
           const monthlyActivityCount = monthlyActivityCountMap[child.id] || 0
+          const childStreak = childStreakMap[child.id] || 0
 
           return (
             <ErrorBoundary
@@ -98,7 +99,7 @@ export default function ChildCardGrid({
                 todayActivityCount={todayActivityCount}
                 weeklyActivityCount={weeklyActivityCount}
                 monthlyActivityCount={monthlyActivityCount}
-                currentStreak={currentStreak}
+                currentStreak={childStreak}
               />
             </ErrorBoundary>
           )

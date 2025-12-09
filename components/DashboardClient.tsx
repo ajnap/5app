@@ -40,6 +40,7 @@ interface DashboardClientProps {
   todayActivityCountMap?: Record<string, number>
   weeklyActivityCountMap?: Record<string, number>
   monthlyActivityCountMap?: Record<string, number>
+  childStreakMap?: Record<string, number>
   weeklyMinutes?: number
   monthlyMinutes?: number
 }
@@ -56,6 +57,7 @@ export default function DashboardClient({
   todayActivityCountMap = {},
   weeklyActivityCountMap = {},
   monthlyActivityCountMap = {},
+  childStreakMap = {},
   weeklyMinutes = 0,
   monthlyMinutes = 0
 }: DashboardClientProps) {
@@ -229,7 +231,7 @@ export default function DashboardClient({
             todayActivityCountMap={todayActivityCountMap}
             weeklyActivityCountMap={weeklyActivityCountMap}
             monthlyActivityCountMap={monthlyActivityCountMap}
-            currentStreak={currentStreak}
+            childStreakMap={childStreakMap}
             onStartActivity={handleStartActivity}
             isRefreshing={isRefreshing}
           />

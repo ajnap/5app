@@ -16,41 +16,21 @@ export async function calculateInsights(
   supabase: SupabaseClient
 ): Promise<ConnectionInsights> {
   try {
-    // Fetch data in parallel for performance
-    const [weeklyStats, monthlyStats, completions, streakData] = await Promise.all([
-      // Weekly time stats
-      supabase.rpc('get_time_stats', {
-        p_user_id: userId,
-        p_period: 'week'
-      }),
-
-      // Monthly time stats
-      supabase.rpc('get_time_stats', {
-        p_user_id: userId,
-        p_period: 'month'
-      }),
-
-      // All completions for this child
-      supabase
-        .from('prompt_completions')
-        .select(`
-          id,
-          completion_date,
-          category:daily_prompts(category),
-          reflection_note,
-          duration_seconds
-        `)
-        .eq('child_id', childId)
-        .order('completion_date', { ascending: false }),
-
-      // Current streak
-      supabase.rpc('get_current_streak', {
-        p_user_id: userId
-      })
-    ])
+    // Fetch completions for this child
+    const { data: completionsData } = await supabase
+      .from('prompt_completions')
+      .select(`
+        id,
+        completion_date,
+        category:daily_prompts(category),
+        reflection_note,
+        duration_seconds
+      `)
+      .eq('child_id', childId)
+      .order('completion_date', { ascending: false })
 
     // Extract completion data
-    const completionData = completions.data || []
+    const completionData = completionsData || []
     const totalCompletions = completionData.length
 
     // Calculate category distribution
@@ -102,11 +82,33 @@ export async function calculateInsights(
       }
     })
 
+    // Calculate child-specific streak from completion dates
+    const uniqueDates = [...new Set(completionData.map((c: any) => c.completion_date))].sort().reverse()
+    let childStreak = 0
+
+    if (uniqueDates.length > 0) {
+      const todayStr = today.toISOString().split('T')[0]
+      let checkDate = new Date(todayStr + 'T00:00:00')
+
+      for (let i = 0; i < uniqueDates.length; i++) {
+        const completionDate = uniqueDates[i]
+        const checkDateStr = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`
+
+        if (completionDate === checkDateStr) {
+          childStreak++
+          checkDate.setDate(checkDate.getDate() - 1)
+        } else if (completionDate < checkDateStr) {
+          // Missed a day, streak broken
+          break
+        }
+      }
+    }
+
     return {
       weeklyMinutes: Math.floor(childWeeklySeconds / 60),
       monthlyMinutes: Math.floor(childMonthlySeconds / 60),
       totalCompletions,
-      currentStreak: streakData.data || 0,
+      currentStreak: childStreak,
       favoriteCategories,
       categoryDistribution,
       lastCompletionDate

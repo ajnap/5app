@@ -102,6 +102,7 @@ export default function ReflectionModal({
       })
 
       // Close modal
+      setIsSubmitting(false)
       onClose()
     } catch (err: any) {
       console.error('Completion error:', err)
@@ -109,6 +110,7 @@ export default function ReflectionModal({
         description: err.message || 'Please try again'
       })
       setError(err.message || 'Failed to save. Please try again.')
+    } finally {
       setIsSubmitting(false)
     }
   }

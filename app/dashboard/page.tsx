@@ -107,6 +107,7 @@ export default async function DashboardPage() {
   const todayActivityCountMap: Record<string, number> = {}
   const weeklyActivityCountMap: Record<string, number> = {}
   const monthlyActivityCountMap: Record<string, number> = {}
+  const childStreakMap: Record<string, number> = {}
 
   // Calculate date ranges
   const sevenDaysAgo = new Date(today)
@@ -120,11 +121,12 @@ export default async function DashboardPage() {
   // Fetch all child stats in parallel
   await Promise.all(
     children.map(async (child) => {
-      // Fetch all three counts in parallel per child
+      // Fetch all counts and completion dates in parallel per child
       const [
         { count: todayCount },
         { count: weeklyCount },
-        { count: monthlyCount }
+        { count: monthlyCount },
+        { data: completionDates }
       ] = await Promise.all([
         // Today's count
         supabase
@@ -148,12 +150,45 @@ export default async function DashboardPage() {
           .select('id', { count: 'exact', head: false })
           .eq('user_id', session.user.id)
           .eq('child_id', child.id)
-          .gte('completion_date', thirtyDaysAgoString)
+          .gte('completion_date', thirtyDaysAgoString),
+
+        // Get unique completion dates for streak calculation (last 60 days)
+        supabase
+          .from('prompt_completions')
+          .select('completion_date')
+          .eq('user_id', session.user.id)
+          .eq('child_id', child.id)
+          .order('completion_date', { ascending: false })
+          .limit(60)
       ])
 
       todayActivityCountMap[child.id] = todayCount || 0
       weeklyActivityCountMap[child.id] = weeklyCount || 0
       monthlyActivityCountMap[child.id] = monthlyCount || 0
+
+      // Calculate child-specific streak from completion dates
+      const uniqueDates = [...new Set((completionDates || []).map(c => c.completion_date))].sort().reverse()
+      let childStreak = 0
+
+      if (uniqueDates.length > 0) {
+        const todayDate = new Date(localDateString)
+        let checkDate = new Date(todayDate)
+
+        for (let i = 0; i < uniqueDates.length; i++) {
+          const completionDate = uniqueDates[i]
+          const checkDateStr = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`
+
+          if (completionDate === checkDateStr) {
+            childStreak++
+            checkDate.setDate(checkDate.getDate() - 1)
+          } else if (completionDate < checkDateStr) {
+            // Missed a day, streak broken
+            break
+          }
+        }
+      }
+
+      childStreakMap[child.id] = childStreak
     })
   )
 
@@ -295,6 +330,7 @@ export default async function DashboardPage() {
           todayActivityCountMap={todayActivityCountMap}
           weeklyActivityCountMap={weeklyActivityCountMap}
           monthlyActivityCountMap={monthlyActivityCountMap}
+          childStreakMap={childStreakMap}
           weeklyMinutes={weeklyMinutes}
           monthlyMinutes={monthlyMinutes}
         />
