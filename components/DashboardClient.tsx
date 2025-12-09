@@ -137,7 +137,9 @@ export default function DashboardClient({
     if (!prompt) return
 
     setCompletingPromptId(promptId)
-    setCompletingChildId(childId) // Store child ID for reflection modal
+    setCompletingChildId(childId)
+    // Default to 5 minutes (300 seconds) for tracking
+    setCompletingDuration(300)
 
     // Trigger confetti
     setShowConfetti(true)

@@ -107,7 +107,7 @@ export default function ReflectionModal({
   if (!isOpen) return null
 
   const faithQuestion = "What did this moment teach you about God's love?"
-  const secularQuestion = 'How did it go? Any special moments?'
+  const secularQuestion = 'What made this moment special?'
   const question = faithMode ? faithQuestion : secularQuestion
 
   // Format duration for display

@@ -15,6 +15,99 @@ interface ChildCardProps {
   currentStreak?: number
 }
 
+// Prompt Detail Modal Component
+function PromptDetailModal({
+  prompt,
+  childName,
+  isOpen,
+  onClose,
+  onStart
+}: {
+  prompt: any
+  childName: string
+  isOpen: boolean
+  onClose: () => void
+  onStart: () => void
+}) {
+  if (!isOpen || !prompt) return null
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+        <div
+          className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto pointer-events-auto"
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="bg-gradient-to-r from-lavender-500 to-purple-600 p-6 rounded-t-2xl">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-white/80 text-xs font-semibold uppercase tracking-wide">
+                  Activity for {childName}
+                </span>
+                <h2 className="text-2xl font-bold text-white mt-1">{prompt.title}</h2>
+              </div>
+              <button onClick={onClose} className="text-white/70 hover:text-white">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex items-center gap-3 mt-3">
+              <span className="bg-white/20 px-3 py-1 rounded-full text-white text-sm font-medium capitalize">
+                {prompt.category}
+              </span>
+              <span className="text-white/80 text-sm">
+                {prompt.estimated_minutes || 5} minutes
+              </span>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 space-y-4">
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">About this activity</h3>
+              <p className="text-gray-700 leading-relaxed">{prompt.description}</p>
+            </div>
+
+            {prompt.activity && (
+              <div className="bg-lavender-50 rounded-xl p-4 border-2 border-lavender-200">
+                <h3 className="font-bold text-lavender-900 mb-2 flex items-center gap-2">
+                  <span>⏱️</span> The Next 5 Minutes
+                </h3>
+                <p className="text-gray-700 leading-relaxed">{prompt.activity}</p>
+              </div>
+            )}
+
+            {prompt.tags && prompt.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {prompt.tags.map((tag: string, i: number) => (
+                  <span key={i} className="bg-gray-100 text-gray-600 px-2 py-1 rounded-md text-xs font-medium">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Action */}
+          <div className="p-6 pt-0">
+            <button
+              onClick={onStart}
+              className="w-full bg-gradient-to-r from-lavender-500 to-purple-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+            >
+              <span className="flex items-center justify-center gap-2">
+                <span>💝</span> Start Activity
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
 const CATEGORY_EMOJIS: Record<string, string> = {
   connection: '💝',
   behavior: '🌱',
@@ -40,6 +133,7 @@ const ChildCard = memo(function ChildCard({
   const router = useRouter()
   const [isStarting, setIsStarting] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
+  const [showPromptDetail, setShowPromptDetail] = useState(false)
 
   // Use custom hook for prompt cycling
   const { currentPrompt: currentScoredPrompt, refresh, isRefreshing, hasMore } = usePromptRefresher(recommendations)
@@ -134,20 +228,25 @@ const ChildCard = memo(function ChildCard({
           )}
         </div>
 
-        {/* Prompt Section */}
+        {/* Prompt Section - Clickable for details */}
         {currentPrompt ? (
           <div
-            className={`space-y-2 transition-all duration-300 ${
+            className={`space-y-2 transition-all duration-300 cursor-pointer hover:bg-white/50 rounded-xl p-2 -m-2 ${
               isRefreshing
                 ? 'opacity-50 scale-95'
                 : 'opacity-100 scale-100'
             }`}
             data-testid={`child-card-prompt-${child.id}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowPromptDetail(true)
+            }}
           >
             <div className="flex items-center gap-2">
               <h4 className="text-xs uppercase tracking-wide font-bold text-primary-600">
                 Today's Connection Idea
               </h4>
+              <span className="text-xs text-gray-400">(tap for details)</span>
             </div>
 
             <h5 className="text-lg font-bold text-gray-900 line-clamp-2">
@@ -283,6 +382,18 @@ const ChildCard = memo(function ChildCard({
           </div>
         </div>
       )}
+
+      {/* Prompt Detail Modal */}
+      <PromptDetailModal
+        prompt={currentPrompt}
+        childName={child.name}
+        isOpen={showPromptDetail}
+        onClose={() => setShowPromptDetail(false)}
+        onStart={() => {
+          setShowPromptDetail(false)
+          handleStart({ stopPropagation: () => {} } as React.MouseEvent)
+        }}
+      />
     </div>
   )
 })
