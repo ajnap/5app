@@ -69,6 +69,7 @@ export default function DashboardClient({
 
   const [reflectionOpen, setReflectionOpen] = useState(false)
   const [completingPromptId, setCompletingPromptId] = useState<string | null>(null)
+  const [completingPromptTitle, setCompletingPromptTitle] = useState<string>('')
   const [completingChildId, setCompletingChildId] = useState<string | null>(null)
   const [completingDuration, setCompletingDuration] = useState<number | undefined>(undefined)
   const [memoryModalOpen, setMemoryModalOpen] = useState(false)
@@ -133,10 +134,25 @@ export default function DashboardClient({
 
   // Handle starting activity from recommendations
   const handleStartActivity = (promptId: string, childId: string) => {
-    const prompt = prompts.find(p => p.id === promptId)
-    if (!prompt) return
+    // Find prompt in local prompts array OR from recommendations
+    let prompt = prompts.find(p => p.id === promptId)
+
+    // If not found in prompts array, get from recommendations
+    if (!prompt) {
+      const childRecommendations = recommendationsMap[childId]?.recommendations || []
+      const rec = childRecommendations.find(r => r.prompt.id === promptId)
+      if (rec) {
+        prompt = rec.prompt as Prompt
+      }
+    }
+
+    if (!prompt) {
+      console.error('Prompt not found:', promptId)
+      return
+    }
 
     setCompletingPromptId(promptId)
+    setCompletingPromptTitle(prompt.title)
     setCompletingChildId(childId)
     // Default to 5 minutes (300 seconds) for tracking
     setCompletingDuration(300)
@@ -271,11 +287,11 @@ export default function DashboardClient({
             setCompletingDuration(undefined)
           }}
           promptId={completingPromptId}
-          promptTitle={prompts.find(p => p.id === completingPromptId)?.title || ''}
+          promptTitle={completingPromptTitle}
           childId={completingChildId}
           faithMode={faithMode}
           durationSeconds={completingDuration}
-          estimatedMinutes={prompts.find(p => p.id === completingPromptId)?.estimated_minutes}
+          estimatedMinutes={5}
           onComplete={handleReflectionComplete}
         />
       )}

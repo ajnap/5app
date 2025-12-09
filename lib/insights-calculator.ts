@@ -78,9 +78,33 @@ export async function calculateInsights(
     // Get last completion date
     const lastCompletionDate = completionData[0]?.completion_date || undefined
 
+    // Calculate child-specific minutes from completions
+    const today = new Date()
+    const weekAgo = new Date(today)
+    weekAgo.setDate(weekAgo.getDate() - 7)
+    const monthAgo = new Date(today)
+    monthAgo.setDate(monthAgo.getDate() - 30)
+
+    const weekAgoStr = weekAgo.toISOString().split('T')[0]
+    const monthAgoStr = monthAgo.toISOString().split('T')[0]
+
+    // Calculate minutes from child's completions (default 5 min each if no duration)
+    let childWeeklySeconds = 0
+    let childMonthlySeconds = 0
+
+    completionData.forEach((c: any) => {
+      const duration = c.duration_seconds || 300 // Default 5 minutes
+      if (c.completion_date >= weekAgoStr) {
+        childWeeklySeconds += duration
+      }
+      if (c.completion_date >= monthAgoStr) {
+        childMonthlySeconds += duration
+      }
+    })
+
     return {
-      weeklyMinutes: (weeklyStats.data as any)?.total_minutes || 0,
-      monthlyMinutes: (monthlyStats.data as any)?.total_minutes || 0,
+      weeklyMinutes: Math.floor(childWeeklySeconds / 60),
+      monthlyMinutes: Math.floor(childMonthlySeconds / 60),
       totalCompletions,
       currentStreak: streakData.data || 0,
       favoriteCategories,
