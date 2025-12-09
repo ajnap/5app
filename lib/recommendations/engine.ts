@@ -240,8 +240,23 @@ export async function generateRecommendations(
       })
     )
 
-    // 6. Sort by score (descending)
-    scoredPrompts.sort((a, b) => b.score - a.score)
+    // 6. Add daily randomization seed for variety
+    // Use date + childId as seed so each child gets different prompts each day
+    const today = new Date().toISOString().split('T')[0]
+    const dailySeed = `${today}-${childId}`
+    const seedHash = dailySeed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+
+    // Add deterministic daily variation to scores (±15%)
+    const randomizedPrompts = scoredPrompts.map((sp, index) => {
+      const dailyVariation = ((seedHash + index * 17) % 30 - 15) / 100 // -0.15 to +0.15
+      return {
+        ...sp,
+        score: sp.score * (1 + dailyVariation)
+      }
+    })
+
+    // Sort by randomized score (descending)
+    randomizedPrompts.sort((a, b) => b.score - a.score)
 
       // 7. Check for single category domination (> 50% completions)
       const dominantCategory = categoryDistribution.stats[0]
@@ -259,7 +274,7 @@ export async function generateRecommendations(
           })
         }
 
-        const diversePrompts = scoredPrompts.filter(
+        const diversePrompts = randomizedPrompts.filter(
           sp => sp.prompt.category !== dominantCategory.category
         )
 
@@ -301,7 +316,7 @@ export async function generateRecommendations(
       }
 
       // 8. Select diverse recommendations
-      const recommendations = selectDiverseRecommendations(scoredPrompts, limit, childId)
+      const recommendations = selectDiverseRecommendations(randomizedPrompts, limit, childId)
 
       const duration = Date.now() - startTime
 
