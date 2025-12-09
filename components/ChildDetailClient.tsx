@@ -9,6 +9,7 @@ import MemoryTimeline from './MemoryTimeline'
 import ReflectionModal from './ReflectionModal'
 import ConfettiCelebration from './ConfettiCelebration'
 import MilestoneCelebration, { detectMilestone, type Milestone } from './MilestoneCelebration'
+import DeleteChildDialog from './DeleteChildDialog'
 import { usePromptRefresher } from '@/lib/hooks/usePromptRefresher'
 import type {
   Child,
@@ -66,6 +67,9 @@ export default function ChildDetailClient({
   const [showConfetti, setShowConfetti] = useState(false)
   const [milestone, setMilestone] = useState<Milestone | null>(null)
   const [milestoneOpen, setMilestoneOpen] = useState(false)
+
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   // Use prompt refresher hook for featured prompt
   const { currentPrompt: featuredScoredPrompt, refresh, isRefreshing, hasMore } = usePromptRefresher(recommendations)
@@ -241,6 +245,34 @@ export default function ChildDetailClient({
 
         {/* Memory Timeline */}
         <MemoryTimeline childId={child.id} childName={child.name} userId={userId} />
+
+        {/* Danger Zone - Delete Child */}
+        <div className="mt-12 pt-8 border-t-2 border-red-100">
+          <div className="bg-red-50/50 rounded-2xl border-2 border-red-200 p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-red-900 mb-1">
+                  Remove Child Profile
+                </h3>
+                <p className="text-sm text-red-700 mb-4">
+                  This will hide {child.name}'s profile and all associated data from your account.
+                  This action can be reversed by contacting support.
+                </p>
+                <button
+                  onClick={() => setDeleteDialogOpen(true)}
+                  className="px-4 py-2 bg-white text-red-600 border-2 border-red-300 rounded-xl font-semibold hover:bg-red-50 hover:border-red-400 transition-colors"
+                >
+                  Remove {child.name}'s Profile
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Confetti Celebration */}
@@ -278,6 +310,14 @@ export default function ChildDetailClient({
           onComplete={handleReflectionComplete}
         />
       )}
+
+      {/* Delete Child Dialog */}
+      <DeleteChildDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        childId={child.id}
+        childName={child.name}
+      />
     </>
   )
 }
