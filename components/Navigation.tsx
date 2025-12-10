@@ -23,7 +23,7 @@ const NAV_ITEMS = [
 export default function Navigation({ showAuthButtons = true }: NavigationProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const [showMemoryTooltip, setShowMemoryTooltip] = useState(false)
+  const [showAssistantTooltip, setShowAssistantTooltip] = useState(false)
 
   return (
     <nav className="sticky top-0 z-50 bg-cream-100/80 backdrop-blur-lg border-b border-cream-200">
@@ -59,22 +59,22 @@ export default function Navigation({ showAuthButtons = true }: NavigationProps) 
               )
             })}
 
-            {/* Add Memory Button */}
+            {/* AI Assistant Button */}
             <div className="relative ml-1">
               <button
-                onClick={() => router.push('/dashboard?addMemory=true')}
-                onMouseEnter={() => setShowMemoryTooltip(true)}
-                onMouseLeave={() => setShowMemoryTooltip(false)}
-                className="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-lavender-500 to-peach-500 text-white rounded-xl shadow-md hover:shadow-lg hover:scale-105 transition-all"
-                aria-label="Add Memory"
+                onClick={() => router.push('/assistant')}
+                onMouseEnter={() => setShowAssistantTooltip(true)}
+                onMouseLeave={() => setShowAssistantTooltip(false)}
+                className="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-lavender-500 to-purple-600 text-white rounded-xl shadow-md hover:shadow-lg hover:scale-105 transition-all"
+                aria-label="AI Assistant"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
                 </svg>
               </button>
-              {showMemoryTooltip && (
+              {showAssistantTooltip && (
                 <div className="absolute top-full right-0 mt-2 px-3 py-1.5 bg-slate-800 text-white text-xs rounded-lg whitespace-nowrap shadow-lg">
-                  Add Memory
+                  AI Assistant
                   <div className="absolute -top-1 right-3 w-2 h-2 bg-slate-800 rotate-45" />
                 </div>
               )}
