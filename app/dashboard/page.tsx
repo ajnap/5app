@@ -277,6 +277,10 @@ export default async function DashboardPage() {
                 <span className="text-lg">❤️</span>
                 <span className="hidden md:inline">Favorites</span>
               </Link>
+              <Link href="/goals" className="nav-link">
+                <span className="text-lg">🎯</span>
+                <span className="hidden md:inline">Goals</span>
+              </Link>
               <Link href="/assistant" className="nav-link">
                 <span className="text-lg">✨</span>
                 <span className="hidden md:inline">Assistant</span>
