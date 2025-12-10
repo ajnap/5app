@@ -1,7 +1,6 @@
 import { createServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import SignOutButton from '@/components/SignOutButton'
+import Navigation from '@/components/Navigation'
 import GoalsClient from '@/components/GoalsClient'
 import { ROUTES } from '@/lib/constants'
 import type { FamilyGoal, GoalCompletion } from '@/lib/goals/types'
@@ -72,39 +71,7 @@ export default async function GoalsPage() {
 
   return (
     <div className="min-h-screen bg-cream-100">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-cream-100/80 backdrop-blur-lg border-b border-cream-200">
-        <div className="container-wide py-4">
-          <div className="flex justify-between items-center">
-            <Link href="/" className="flex items-center gap-2 group">
-              <span className="text-xl transition-transform group-hover:scale-110">❤️</span>
-              <span className="font-display text-lg font-semibold text-lavender-600 hidden sm:block">
-                The Next 5 Minutes
-              </span>
-            </Link>
-
-            <div className="flex items-center gap-2">
-              <Link href="/dashboard" className="nav-link">
-                <span className="text-lg">🏠</span>
-                <span className="hidden md:inline">Dashboard</span>
-              </Link>
-              <Link href="/goals" className="nav-link bg-lavender-100 text-lavender-700">
-                <span className="text-lg">🎯</span>
-                <span className="hidden md:inline">Goals</span>
-              </Link>
-              <Link href="/children" className="nav-link">
-                <span className="text-lg">👶</span>
-                <span className="hidden md:inline">Children</span>
-              </Link>
-              <Link href={ROUTES.ACCOUNT} className="nav-link">
-                <span className="text-lg">⚙️</span>
-                <span className="hidden md:inline">Account</span>
-              </Link>
-              <SignOutButton />
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Main Content */}
       <main className="container-narrow py-8">

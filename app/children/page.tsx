@@ -1,7 +1,6 @@
 import { createServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import SignOutButton from '@/components/SignOutButton'
+import Navigation from '@/components/Navigation'
 import AddChildButton from '@/components/AddChildButton'
 import ChildProfileCard from '@/components/ChildProfileCard'
 import { ROUTES } from '@/lib/constants'
@@ -39,29 +38,7 @@ export default async function ChildrenPage() {
 
   return (
     <div className="min-h-screen bg-cream-100">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-cream-100/80 backdrop-blur-lg border-b border-cream-200">
-        <div className="container-wide py-4">
-          <div className="flex justify-between items-center">
-            <Link href={ROUTES.DASHBOARD} className="flex items-center gap-2 group">
-              <span className="text-xl transition-transform group-hover:scale-110">❤️</span>
-              <span className="font-display text-lg font-semibold text-lavender-600 hidden sm:block">
-                The Next 5 Minutes
-              </span>
-            </Link>
-
-            <div className="flex items-center gap-2">
-              <Link href={ROUTES.DASHBOARD} className="nav-link">
-                Dashboard
-              </Link>
-              <Link href={ROUTES.ACCOUNT} className="nav-link">
-                Account
-              </Link>
-              <SignOutButton />
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Main Content */}
       <main className="container-narrow py-12">

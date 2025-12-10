@@ -1,7 +1,8 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
+import Navigation from '@/components/Navigation'
 import AssistantClient from '@/components/AssistantClient'
+import { ROUTES } from '@/lib/constants'
 
 export const metadata = {
   title: 'Parenting Assistant | The Next 5 Minutes',
@@ -9,25 +10,14 @@ export const metadata = {
 }
 
 export default async function AssistantPage() {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
+  const supabase = await createServerClient()
 
   const {
     data: { session },
   } = await supabase.auth.getSession()
 
   if (!session) {
-    redirect('/signup')
+    redirect(ROUTES.SIGNUP)
   }
 
   // Get user's children for welcome message
@@ -40,7 +30,8 @@ export default async function AssistantPage() {
   const childNames = children?.map((c) => c.name).join(', ') || 'your children'
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-cream-100">
+      <Navigation />
       <AssistantClient userId={session.user.id} childNames={childNames} />
     </div>
   )

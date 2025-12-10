@@ -1,7 +1,6 @@
 import { createServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import SignOutButton from '@/components/SignOutButton'
+import Navigation from '@/components/Navigation'
 import CheckoutButton from '@/components/CheckoutButton'
 import ManageSubscriptionButton from '@/components/ManageSubscriptionButton'
 import CalendarConnection from '@/components/CalendarConnection'
@@ -28,27 +27,11 @@ export default async function AccountPage() {
   const subscriptionTier = profile?.subscription_tier || 'free'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-      {/* Navigation */}
-      <nav className="container mx-auto px-6 py-6 fade-in">
-        <div className="flex justify-between items-center backdrop-blur-sm bg-white/30 rounded-2xl px-6 py-3 shadow-sm">
-          <Link href={ROUTES.DASHBOARD} className="text-2xl font-bold gradient-text">
-            The Next 5 Minutes
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link
-              href={ROUTES.DASHBOARD}
-              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
-            >
-              Dashboard
-            </Link>
-            <SignOutButton />
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-cream-100">
+      <Navigation />
 
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
+      <main className="container-narrow py-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 fade-in">Account Settings</h1>
 

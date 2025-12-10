@@ -1,6 +1,8 @@
 import { createServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
+import Navigation from '@/components/Navigation'
 import SpouseClient from '@/components/SpouseClient'
+import { ROUTES } from '@/lib/constants'
 
 export const metadata = {
   title: 'Spouse Connection | The Next 5 Minutes',
@@ -15,7 +17,7 @@ export default async function SpousePage() {
   } = await supabase.auth.getSession()
 
   if (!session) {
-    redirect('/signup')
+    redirect(ROUTES.SIGNUP)
   }
 
   // Get or create spouse profile
@@ -89,7 +91,8 @@ export default async function SpousePage() {
   })
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 via-rose-50 to-white">
+    <div className="min-h-screen bg-cream-100">
+      <Navigation />
       <SpouseClient
         userId={session.user.id}
         spouseProfile={spouseProfile}
