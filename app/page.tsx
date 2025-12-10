@@ -287,8 +287,9 @@ export default function LandingPage() {
                 Get started
                 <ArrowIcon className="transition-transform group-hover:translate-x-1" />
               </Link>
-              <Link href="#how-it-works" className="btn-secondary">
-                Learn more
+              <Link href="/try" className="btn-secondary group">
+                Try it free
+                <span className="inline-block transition-transform group-hover:scale-110">✨</span>
               </Link>
             </div>
 

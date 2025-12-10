@@ -3,6 +3,7 @@ import { DM_Sans, Fraunces } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Toaster } from 'sonner'
+import { GuestProvider } from '@/lib/guest-mode'
 import './globals.css'
 
 // Body font - clean, readable sans-serif
@@ -47,7 +48,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${dmSans.variable} ${fraunces.variable}`}>
       <body className={dmSans.className}>
-        {children}
+        <GuestProvider>
+          {children}
+        </GuestProvider>
         <Toaster
           position="top-center"
           richColors

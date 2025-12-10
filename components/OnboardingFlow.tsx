@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createBrowserClient } from '@supabase/ssr'
+import { useGuest, GuestChild } from '@/lib/guest-mode'
 
 interface OnboardingFlowProps {
   userId: string
@@ -12,8 +13,10 @@ interface OnboardingFlowProps {
 
 export default function OnboardingFlow({ userId, userEmail }: OnboardingFlowProps) {
   const router = useRouter()
+  const { guestData, clearGuestData } = useGuest()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [hasGuestData, setHasGuestData] = useState(false)
 
   // Step 1: Faith mode
   const [faithMode, setFaithMode] = useState(false)
@@ -27,6 +30,16 @@ export default function OnboardingFlow({ userId, userEmail }: OnboardingFlowProp
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
+
+  // Pre-populate from guest data if available
+  useEffect(() => {
+    if (guestData.children.length > 0) {
+      setHasGuestData(true)
+      const firstChild = guestData.children[0]
+      setChildName(firstChild.name)
+      setChildBirthDate(firstChild.birth_date)
+    }
+  }, [guestData.children])
 
   const handleStep1Continue = () => {
     setCurrentStep(2)
@@ -69,19 +82,42 @@ export default function OnboardingFlow({ userId, userEmail }: OnboardingFlowProp
 
       if (profileError) throw profileError
 
-      // 2. Create first child profile
-      const { error: childError } = await supabase
-        .from('child_profiles')
-        .insert({
+      // 2. Migrate all guest children if available
+      if (hasGuestData && guestData.children.length > 0) {
+        // Insert all guest children
+        const childInserts = guestData.children.map((child: GuestChild) => ({
           user_id: userId,
-          name: childName.trim(),
-          birth_date: childBirthDate,
-          interests: [],
+          name: child.name.trim(),
+          birth_date: child.birth_date,
+          interests: child.interests || [],
           personality_traits: [],
-          current_challenges: [],
-        })
+          current_challenges: child.challenges || [],
+        }))
 
-      if (childError) throw childError
+        const { error: childError } = await supabase
+          .from('child_profiles')
+          .insert(childInserts)
+
+        if (childError) throw childError
+
+        // Clear guest data after successful migration
+        clearGuestData()
+        toast.success('Your demo data has been saved!')
+      } else {
+        // No guest data - create first child profile normally
+        const { error: childError } = await supabase
+          .from('child_profiles')
+          .insert({
+            user_id: userId,
+            name: childName.trim(),
+            birth_date: childBirthDate,
+            interests: [],
+            personality_traits: [],
+            current_challenges: [],
+          })
+
+        if (childError) throw childError
+      }
 
       // 3. Redirect to dashboard
       router.push('/dashboard')
@@ -237,12 +273,29 @@ export default function OnboardingFlow({ userId, userEmail }: OnboardingFlowProp
             <div className="text-center mb-8">
               <div className="text-5xl mb-4 animate-bounce-gentle">👶</div>
               <h1 className="font-display text-display-sm text-slate-900 mb-3">
-                Tell us about your first child
+                {hasGuestData ? 'Confirm your child\'s info' : 'Tell us about your first child'}
               </h1>
               <p className="text-slate-600 text-body-lg">
                 We'll use this to personalize age-appropriate activities and track your connection journey together.
               </p>
             </div>
+
+            {/* Guest data migration notice */}
+            {hasGuestData && guestData.children.length > 0 && (
+              <div className="bg-sage-50 border border-sage-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
+                <span className="text-xl">✨</span>
+                <div>
+                  <p className="text-sage-800 font-medium text-sm">
+                    {guestData.children.length === 1
+                      ? 'Your demo child will be saved!'
+                      : `Your ${guestData.children.length} demo children will be saved!`}
+                  </p>
+                  <p className="text-sage-600 text-xs mt-1">
+                    All the information from your try-out session will be transferred to your account.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-5 mb-8">
               <div>
