@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useState } from 'react'
 import SignOutButton from './SignOutButton'
 import { ROUTES } from '@/lib/constants'
 
@@ -13,7 +14,7 @@ const NAV_ITEMS = [
   { href: '/dashboard', label: 'Home', icon: '🏠' },
   { href: '/favorites', label: 'Favorites', icon: '❤️' },
   { href: '/goals', label: 'Goals', icon: '🎯' },
-  { href: '/assistant', label: 'Assistant', icon: '✨' },
+  { href: '/schedule', label: 'Schedule', icon: '📅' },
   { href: '/spouse', label: 'Spouse', icon: '💑' },
   { href: '/children', label: 'Children', icon: '👶' },
   { href: ROUTES.ACCOUNT, label: 'Account', icon: '⚙️' },
@@ -21,6 +22,8 @@ const NAV_ITEMS = [
 
 export default function Navigation({ showAuthButtons = true }: NavigationProps) {
   const pathname = usePathname()
+  const router = useRouter()
+  const [showMemoryTooltip, setShowMemoryTooltip] = useState(false)
 
   return (
     <nav className="sticky top-0 z-50 bg-cream-100/80 backdrop-blur-lg border-b border-cream-200">
@@ -55,6 +58,27 @@ export default function Navigation({ showAuthButtons = true }: NavigationProps) 
                 </Link>
               )
             })}
+
+            {/* Add Memory Button */}
+            <div className="relative ml-1">
+              <button
+                onClick={() => router.push('/dashboard?addMemory=true')}
+                onMouseEnter={() => setShowMemoryTooltip(true)}
+                onMouseLeave={() => setShowMemoryTooltip(false)}
+                className="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-lavender-500 to-peach-500 text-white rounded-xl shadow-md hover:shadow-lg hover:scale-105 transition-all"
+                aria-label="Add Memory"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+              {showMemoryTooltip && (
+                <div className="absolute top-full right-0 mt-2 px-3 py-1.5 bg-slate-800 text-white text-xs rounded-lg whitespace-nowrap shadow-lg">
+                  Add Memory
+                  <div className="absolute -top-1 right-3 w-2 h-2 bg-slate-800 rotate-45" />
+                </div>
+              )}
+            </div>
 
             {showAuthButtons && <SignOutButton />}
           </div>

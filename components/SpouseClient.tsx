@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { createBrowserClient } from '@supabase/ssr'
-import Link from 'next/link'
 
 interface SpouseProfile {
   id: string
@@ -269,36 +268,7 @@ export default function SpouseClient({
     : null
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-rose-50 via-pink-50 to-cream-100">
-      {/* Header */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-rose-100">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-rose-400 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg shadow-rose-200/50">
-                <span className="text-2xl">💑</span>
-              </div>
-              <div>
-                <h1 className="font-display text-xl font-bold text-slate-900">
-                  Spouse Connection
-                </h1>
-                <p className="text-xs text-slate-500">Strengthen your partnership daily</p>
-              </div>
-            </div>
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-rose-600 font-medium rounded-xl hover:bg-rose-50 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              <span>Dashboard</span>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
-      <main className="container mx-auto px-6 py-8 max-w-4xl">
+    <main className="container mx-auto px-6 py-8 max-w-4xl">
         <div className="space-y-6">
 
           {/* Hero Card: Today's Question */}
@@ -564,7 +534,6 @@ export default function SpouseClient({
             </div>
           )}
         </div>
-      </main>
-    </div>
+    </main>
   )
 }
