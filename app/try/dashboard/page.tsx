@@ -194,7 +194,7 @@ export default function TryDashboardPage() {
             <span className="text-xs sm:text-sm font-medium text-slate-700">Add Child</span>
           </button>
           <button
-            onClick={() => toast.info('Browse 70+ connection activities with a full account!')}
+            onClick={() => router.push('/try/browse')}
             className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl border border-cream-200 hover:border-lavender-300 hover:shadow-md transition-all"
           >
             <span className="text-2xl">💡</span>
