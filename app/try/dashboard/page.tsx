@@ -6,47 +6,47 @@ import { useRouter } from 'next/navigation'
 import { useGuest, GuestChild } from '@/lib/guest-mode'
 import { toast } from 'sonner'
 
-// Sample prompts for the demo (we'll use a subset)
+// High-impact demo prompts that showcase the app's value
 const DEMO_PROMPTS = [
   {
     id: 'demo-1',
-    title: 'The Power of Yet',
-    description: 'Reframe failure as part of learning.',
-    activity: "When your child says \"I can't do this,\" teach them to add the word \"yet\" to the end. Practice together: \"I can't tie my shoes... yet!\" Discuss one thing they couldn't do before but can do now.",
-    category: 'Emotional Intelligence',
-    tags: ['growth-mindset', 'encouragement'],
+    title: 'The 3-2-1 Connection',
+    description: 'A powerful daily check-in that builds emotional safety.',
+    activity: "Sit together and share: 3 things that happened today, 2 things you're grateful for, and 1 thing you're looking forward to tomorrow. Take turns - you share too! This simple ritual creates a safe space for your child to open up about their day and builds the habit of reflection.",
+    category: 'Emotional Connection',
+    tags: ['daily-ritual', 'emotional-safety'],
   },
   {
     id: 'demo-2',
-    title: 'Curiosity Question',
-    description: 'Wonder together.',
-    activity: 'Ask your child: "What\'s something you\'ve always wondered about?" Listen to their question, then explore possible answers together. No phones needed - just imagination!',
-    category: 'Learning & Curiosity',
-    tags: ['conversation', 'bonding'],
+    title: 'The Special Handshake',
+    description: 'Create a unique bond only you two share.',
+    activity: "Work together to create a special secret handshake that's just between you and your child. Include at least 3 moves (fist bump, high five, wiggle fingers, etc). Practice it until you both have it down. Use it as your special greeting or goodbye. This becomes YOUR thing - a physical reminder of your unique bond.",
+    category: 'Bonding',
+    tags: ['physical-connection', 'tradition'],
   },
   {
     id: 'demo-3',
-    title: 'Gratitude Moment',
-    description: 'Build thankfulness together.',
-    activity: 'Take turns sharing 3 things you\'re each grateful for today. Try to find at least one unexpected thing to be thankful for. End with a hug!',
-    category: 'Emotional Intelligence',
-    tags: ['gratitude', 'positive'],
+    title: 'Dream Big Together',
+    description: 'Explore their hopes and show you believe in them.',
+    activity: "Ask: 'If you could do ANYTHING when you grow up, what would it be?' Listen without judgment or practical concerns. Then ask: 'What's one thing we could do this week to learn more about that?' Write it down together. Following up shows them their dreams matter to you.",
+    category: 'Future & Growth',
+    tags: ['dreams', 'validation'],
   },
   {
     id: 'demo-4',
-    title: 'Silly Story Time',
-    description: 'Create together, laugh together.',
-    activity: 'Take turns adding one sentence to create a silly story. Start with "Once upon a time, there was a purple elephant who..." Let imagination run wild!',
-    category: 'Creativity',
-    tags: ['storytelling', 'fun'],
+    title: 'The Appreciation Minute',
+    description: 'Tell them exactly why they matter.',
+    activity: "Look your child in the eyes and spend 60 seconds telling them specific things you appreciate about them. Not what they DO, but who they ARE: 'I love how kind you are to your sister. I admire how you keep trying even when things are hard. Your laugh makes my whole day better.' Be specific. Watch them light up.",
+    category: 'Self-Worth',
+    tags: ['affirmation', 'identity'],
   },
   {
     id: 'demo-5',
-    title: 'Memory Lane',
-    description: 'Share a favorite memory.',
-    activity: 'Tell your child about a favorite memory from when they were younger. Ask them about their favorite memory. What made these moments special?',
-    category: 'Connection',
-    tags: ['memories', 'conversation'],
+    title: 'Worry Time',
+    description: 'Help them feel heard and less alone.',
+    activity: "Create a safe moment to ask: 'Is there anything that's been bothering you or making you worried?' If they share, just listen first. Don't fix - validate: 'That sounds really hard.' Then ask: 'How can I help?' Sometimes they just need to know you're in their corner.",
+    category: 'Emotional Support',
+    tags: ['anxiety', 'listening'],
   },
 ]
 
@@ -183,28 +183,72 @@ export default function TryDashboardPage() {
           </p>
         </div>
 
-        {/* Quick actions */}
-        <div className="grid grid-cols-3 gap-4 mb-10">
+        {/* Feature buttons grid */}
+        <div className="grid grid-cols-4 sm:grid-cols-4 gap-3 mb-10">
+          {/* Unlocked features */}
           <button
             onClick={() => router.push('/try')}
             className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl border border-cream-200 hover:border-lavender-300 hover:shadow-md transition-all"
           >
             <span className="text-2xl">👶</span>
-            <span className="text-sm font-medium text-slate-700">Add Child</span>
+            <span className="text-xs sm:text-sm font-medium text-slate-700">Add Child</span>
           </button>
-          <Link
-            href="/signup"
-            className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl border border-cream-200 hover:border-lavender-300 hover:shadow-md transition-all"
-          >
-            <span className="text-2xl">💾</span>
-            <span className="text-sm font-medium text-slate-700">Save Progress</span>
-          </Link>
           <button
-            onClick={() => toast.info('Schedule feature available with full account!')}
+            onClick={() => toast.info('Browse 70+ connection activities with a full account!')}
             className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl border border-cream-200 hover:border-lavender-300 hover:shadow-md transition-all"
           >
-            <span className="text-2xl">📅</span>
-            <span className="text-sm font-medium text-slate-700">Schedule</span>
+            <span className="text-2xl">💡</span>
+            <span className="text-xs sm:text-sm font-medium text-slate-700">Browse All</span>
+          </button>
+
+          {/* Locked features - with lock indicator */}
+          <button
+            onClick={() => toast.info('Track your favorites with a full account!')}
+            className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl border border-cream-200 hover:border-lavender-300 hover:shadow-md transition-all relative group"
+          >
+            <span className="absolute -top-1 -right-1 text-xs">🔒</span>
+            <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">❤️</span>
+            <span className="text-xs sm:text-sm font-medium text-slate-500 group-hover:text-slate-700">Favorites</span>
+          </button>
+          <button
+            onClick={() => toast.info('Set family goals with a full account!')}
+            className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl border border-cream-200 hover:border-lavender-300 hover:shadow-md transition-all relative group"
+          >
+            <span className="absolute -top-1 -right-1 text-xs">🔒</span>
+            <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">🎯</span>
+            <span className="text-xs sm:text-sm font-medium text-slate-500 group-hover:text-slate-700">Goals</span>
+          </button>
+          <button
+            onClick={() => toast.info('Schedule reminders with a full account!')}
+            className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl border border-cream-200 hover:border-lavender-300 hover:shadow-md transition-all relative group"
+          >
+            <span className="absolute -top-1 -right-1 text-xs">🔒</span>
+            <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">📅</span>
+            <span className="text-xs sm:text-sm font-medium text-slate-500 group-hover:text-slate-700">Schedule</span>
+          </button>
+          <button
+            onClick={() => toast.info('Connect with your spouse with a full account!')}
+            className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl border border-cream-200 hover:border-lavender-300 hover:shadow-md transition-all relative group"
+          >
+            <span className="absolute -top-1 -right-1 text-xs">🔒</span>
+            <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">💑</span>
+            <span className="text-xs sm:text-sm font-medium text-slate-500 group-hover:text-slate-700">Spouse</span>
+          </button>
+          <button
+            onClick={() => toast.info('Track your streak with a full account!')}
+            className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl border border-cream-200 hover:border-lavender-300 hover:shadow-md transition-all relative group"
+          >
+            <span className="absolute -top-1 -right-1 text-xs">🔒</span>
+            <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">🔥</span>
+            <span className="text-xs sm:text-sm font-medium text-slate-500 group-hover:text-slate-700">Streak</span>
+          </button>
+          <button
+            onClick={() => toast.info('Get AI parenting help with a full account!')}
+            className="flex flex-col items-center gap-2 p-4 bg-white rounded-xl border border-cream-200 hover:border-lavender-300 hover:shadow-md transition-all relative group"
+          >
+            <span className="absolute -top-1 -right-1 text-xs">🔒</span>
+            <span className="text-2xl opacity-60 group-hover:opacity-100 transition-opacity">✨</span>
+            <span className="text-xs sm:text-sm font-medium text-slate-500 group-hover:text-slate-700">AI Help</span>
           </button>
         </div>
 
