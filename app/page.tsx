@@ -600,6 +600,21 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Inspirational Quote */}
+      <section className="section bg-cream-100">
+        <div className="container-narrow">
+          <div className="max-w-2xl mx-auto text-center fade-in-up">
+            <div className="text-4xl mb-6">✨</div>
+            <blockquote className="font-display text-2xl md:text-3xl text-slate-800 italic leading-relaxed mb-4">
+              &ldquo;No other work transcends that of righteous, intentional parenting!&rdquo;
+            </blockquote>
+            <cite className="text-slate-500 text-sm font-medium not-italic">
+              — President Russell M. Nelson
+            </cite>
+          </div>
+        </div>
+      </section>
+
       {/* Final CTA Section */}
       <section className="section bg-lavender-500 text-white relative overflow-hidden">
         {/* Background decoration */}
