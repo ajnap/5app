@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useGuest } from '@/lib/guest-mode'
@@ -81,11 +81,12 @@ function GuideCharacter({ mood }: { mood: 'wave' | 'think' | 'celebrate' }) {
 
 export default function TryPage() {
   const router = useRouter()
-  const { addChild, setOnboardingCompleted } = useGuest()
+  const { addChild, setOnboardingCompleted, clearGuestData } = useGuest()
+
 
   const [step, setStep] = useState(1)
   const [childName, setChildName] = useState('')
-  const [birthDate, setBirthDate] = useState('')
+  const [childAge, setChildAge] = useState('')
   const [selectedInterests, setSelectedInterests] = useState<string[]>([])
   const [selectedChallenges, setSelectedChallenges] = useState<string[]>([])
 
@@ -104,6 +105,11 @@ export default function TryPage() {
   }
 
   const handleComplete = () => {
+    // Convert age to approximate birth date
+    const age = parseInt(childAge) || 5
+    const birthYear = new Date().getFullYear() - age
+    const birthDate = `${birthYear}-01-01`
+
     addChild({
       name: childName,
       birth_date: birthDate,
@@ -111,13 +117,13 @@ export default function TryPage() {
       challenges: selectedChallenges,
     })
     setOnboardingCompleted(true)
-    router.push('/try/dashboard')
+    setTimeout(() => router.push('/try/dashboard'), 100)
   }
 
   const canProceed = () => {
     switch (step) {
       case 1: return childName.trim().length >= 1
-      case 2: return birthDate !== ''
+      case 2: return childAge !== '' && parseInt(childAge) > 0
       case 3: return true // Interests are optional
       case 4: return true // Challenges are optional
       default: return false
@@ -135,12 +141,15 @@ export default function TryPage() {
       <div className="w-full max-w-lg relative z-10">
         {/* Header */}
         <div className="text-center mb-2">
-          <Link href="/" className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-700 text-sm mb-6">
+          <button
+            onClick={() => { clearGuestData(); router.push('/') }}
+            className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-700 text-sm mb-6"
+          >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Back to home
-          </Link>
+          </button>
         </div>
 
         {/* Progress bar */}
@@ -180,22 +189,24 @@ export default function TryPage() {
             </div>
           )}
 
-          {/* Step 2: Birthday */}
+          {/* Step 2: Age */}
           {step === 2 && (
             <div className="text-center">
               <GuideCharacter mood="think" />
               <h1 className="font-display text-2xl font-semibold text-slate-900 mb-2">
-                When was {childName} born?
+                How old is {childName}?
               </h1>
               <p className="text-slate-600 mb-8">
                 This helps us suggest age-appropriate activities
               </p>
               <input
-                type="date"
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
-                className="w-full text-center text-lg border-2 border-cream-200 focus:border-lavender-400 focus:ring-2 focus:ring-lavender-100 rounded-xl py-4 px-4"
+                type="number"
+                value={childAge}
+                onChange={(e) => setChildAge(e.target.value)}
+                min="1"
+                max="99"
+                placeholder="Enter age..."
+                className="w-full text-center text-2xl font-medium border-2 border-cream-200 focus:border-lavender-400 focus:ring-2 focus:ring-lavender-100 rounded-xl py-4 px-4"
               />
             </div>
           )}

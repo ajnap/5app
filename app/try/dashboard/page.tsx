@@ -50,17 +50,17 @@ const DEMO_PROMPTS = [
   },
 ]
 
-function GuestNav() {
+function GuestNav({ onGoHome }: { onGoHome: () => void }) {
   return (
     <nav className="sticky top-0 z-50 bg-cream-100/80 backdrop-blur-lg border-b border-cream-200">
       <div className="container-wide py-3">
         <div className="flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 group">
+          <button onClick={onGoHome} className="flex items-center gap-2 group">
             <span className="text-xl transition-transform group-hover:scale-110">❤️</span>
             <span className="font-display text-lg font-semibold text-lavender-600 hidden sm:block">
               The Next 5 Minutes
             </span>
-          </Link>
+          </button>
           <div className="flex items-center gap-2">
             <span className="hidden sm:inline text-sm text-slate-500 bg-peach-100 px-3 py-1 rounded-full">
               Try Mode
@@ -132,7 +132,12 @@ function ChildCard({ child, prompt, onComplete }: { child: GuestChild; prompt: t
 
 export default function TryDashboardPage() {
   const router = useRouter()
-  const { guestData, addCompletion } = useGuest()
+  const { guestData, addCompletion, clearGuestData } = useGuest()
+
+  const handleGoHome = () => {
+    clearGuestData()
+    router.push('/')
+  }
   const [completedToday, setCompletedToday] = useState<Set<string>>(new Set())
   const [showSignupPrompt, setShowSignupPrompt] = useState(false)
 
@@ -170,7 +175,7 @@ export default function TryDashboardPage() {
 
   return (
     <div className="min-h-screen bg-cream-100">
-      <GuestNav />
+      <GuestNav onGoHome={handleGoHome} />
 
       <main className="container-narrow py-8">
         {/* Header */}
